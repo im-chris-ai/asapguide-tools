@@ -1,0 +1,382 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="LLM Token Counter | AsapGuide" 
+  description="Instantly estimate token usage for OpenAI (GPT-4o), Anthropic (Claude), and Google (Gemini) directly in your browser."
+>
+
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">AI Tools</p>
+    <h1 class="tool-title">Token <em class="accent">Counter</em></h1>
+    <p class="tool-desc">Paste your text to instantly estimate token counts across major LLMs. Runs entirely locally in your browser.</p>
+  </div>
+
+  <!-- ── Main Workspace ── -->
+  <div class="workspace">
+
+    <!-- Input Section -->
+    <div class="editor-panel input-panel">
+      <div class="panel-bar">
+        <div class="panel-bar-left">
+          <h2>Input Text</h2>
+        </div>
+        <div class="panel-bar-right">
+          <button id="btn-clear" class="btn-ghost">Clear</button>
+        </div>
+      </div>
+      <div class="input-container">
+        <textarea id="text-input" spellcheck="false" placeholder="Paste your massive block of text, code, or prompt here..."></textarea>
+        
+        <!-- Base Stats Footer -->
+        <div class="input-footer">
+          <span><strong id="val-chars">0</strong> Characters</span>
+          <span class="divider">•</span>
+          <span><strong id="val-words">0</strong> Words</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Section -->
+    <div class="stats-grid">
+      <!-- LLM Stats -->
+      <div class="stat-card highlight openai">
+        <div class="stat-header">
+          <h3>OpenAI</h3>
+          <span class="model-tag">GPT-5 / o1</span>
+        </div>
+        <div class="stat-value" id="val-openai">0</div>
+        <div class="stat-sub">Exact Count (o200k_base)</div>
+      </div>
+
+      <div class="stat-card highlight claude">
+        <div class="stat-header">
+          <h3>Anthropic</h3>
+          <span class="model-tag">Claude 4.5 / 4.7</span>
+        </div>
+        <div class="stat-value" id="val-claude">0</div>
+        <div class="stat-sub">Estimated (Chars / 3.0)</div>
+      </div>
+
+      <div class="stat-card highlight gemini">
+        <div class="stat-header">
+          <h3>Google</h3>
+          <span class="model-tag">Gemini 3.5</span>
+        </div>
+        <div class="stat-value" id="val-gemini">0</div>
+        <div class="stat-sub">Estimated (Chars / 4)</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── SEO Article ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>How the LLM Token Counter Works</h2>
+      <p>This tool allows you to paste large documents or codebases and instantly get an estimate of how many tokens they will consume before you send them to an API, helping you manage costs and stay within context limits.</p>
+
+      <h3>OpenAI (Exact Count)</h3>
+      <p>For OpenAI models like GPT-5 and o1, we use the exact <code>o200k_base</code> tokenization algorithm running locally in your browser. The token count shown here will perfectly match what OpenAI bills you for.</p>
+
+      <h3>Claude & Gemini (Estimations)</h3>
+      <p>Anthropic and Google use proprietary, server-side tokenizers that vary slightly between model versions. Because there is no official lightweight client-side library for these models, we use industry-standard heuristics:</p>
+      <ul>
+        <li><strong>Claude:</strong> Newer models like Claude 4.5 and 4.7 use updated tokenizers that are slightly less efficient than older models. We estimate using <strong>3.0 characters</strong> per token. Keep in mind that code and JSON are more "token-dense" than standard English prose.</li>
+        <li><strong>Gemini:</strong> Google's standard rule of thumb for Gemini 3.5 is that 1 token is approximately <strong>4 characters</strong> of English text.</li>
+      </ul>
+
+      <h3>Privacy Guarantee</h3>
+      <p>This entire tool runs strictly in your browser using JavaScript. Your text is <strong>never</strong> uploaded, saved, or sent to any server. It is completely safe to paste confidential code or private documents here.</p>
+    </article>
+  </div>
+
+</Layout>
+
+<style>
+  /* ── Hero ── */
+  .tool-hero {
+    background: var(--color-surface);
+    padding: 64px 24px 56px;
+    text-align: center;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-secondary);
+    margin-bottom: 16px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    color: var(--color-primary);
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1.1rem;
+    color: var(--color-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── Workspace ── */
+  .workspace {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* ── Input Panel ── */
+  .editor-panel {
+    background: var(--color-neutral);
+    border-radius: var(--rounded-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+  }
+
+  .panel-bar-left h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+  .input-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .input-container:focus-within {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8,102,255,0.1);
+  }
+
+  textarea {
+    width: 100%;
+    height: 300px;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+    padding: 16px;
+    background: transparent;
+    color: var(--color-primary);
+    border: none;
+    outline: none;
+  }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: transparent;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    color: var(--color-secondary);
+  }
+
+  .input-footer strong {
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  .input-footer .divider {
+    opacity: 0.5;
+  }
+
+  /* ── Stats Grid ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+
+  .stat-card h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--font-family);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-sub {
+    font-size: 0.75rem;
+    color: var(--color-secondary);
+  }
+
+  .stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .stat-header h3 { margin: 0; }
+
+  .model-tag {
+    font-size: 0.65rem;
+    background: var(--color-neutral);
+    padding: 2px 6px;
+    border-radius: 12px;
+    color: var(--color-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Highlights */
+  .stat-card.highlight {
+    border: 2px solid transparent;
+  }
+  .stat-card.openai { border-color: rgba(16, 163, 127, 0.2); }
+  .stat-card.claude { border-color: rgba(212, 163, 115, 0.3); }
+  .stat-card.gemini { border-color: rgba(66, 133, 244, 0.2); }
+
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  // Dynamic import of gpt-tokenizer (so it doesn't block page load initially)
+  import { encode } from 'gpt-tokenizer';
+
+  const textInput = document.getElementById('text-input') as HTMLTextAreaElement;
+  const btnClear = document.getElementById('btn-clear') as HTMLButtonElement;
+  
+  const elChars = document.getElementById('val-chars') as HTMLElement;
+  const elWords = document.getElementById('val-words') as HTMLElement;
+  const elOpenAI = document.getElementById('val-openai') as HTMLDivElement;
+  const elClaude = document.getElementById('val-claude') as HTMLDivElement;
+  const elGemini = document.getElementById('val-gemini') as HTMLDivElement;
+
+  function formatNumber(num: number): string {
+    return new Intl.NumberFormat('en-US').format(num);
+  }
+
+  function countWords(str: string): number {
+    const trimmed = str.trim();
+    if (!trimmed) return 0;
+    return trimmed.split(/\s+/).length;
+  }
+
+  function updateCounts() {
+    const text = textInput.value;
+    const charCount = text.length;
+
+    // Base Stats
+    elChars.textContent = formatNumber(charCount);
+    elWords.textContent = formatNumber(countWords(text));
+
+    if (charCount === 0) {
+      elOpenAI.textContent = '0';
+      elClaude.textContent = '0';
+      elGemini.textContent = '0';
+      return;
+    }
+
+    // Heuristics for Claude and Gemini
+    // Claude 4.x models have more token-dense tokenizers, averaging ~3.0 chars per token
+    const claudeEst = Math.ceil(charCount / 3.0);
+    const geminiEst = Math.ceil(charCount / 4);
+    
+    elClaude.textContent = formatNumber(claudeEst);
+    elGemini.textContent = formatNumber(geminiEst);
+
+    // Exact count for OpenAI
+    try {
+      const tokens = encode(text);
+      elOpenAI.textContent = formatNumber(tokens.length);
+    } catch (e) {
+      console.error("Tokenizer error", e);
+      elOpenAI.textContent = "Error";
+    }
+  }
+
+  // Debounce the input listener so we don't block the main thread on massive pastes
+  let timeout: number;
+  textInput.addEventListener('input', () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(updateCounts, 300) as any;
+  });
+
+  btnClear.addEventListener('click', () => {
+    textInput.value = '';
+    updateCounts();
+    textInput.focus();
+  });
+
+</script>

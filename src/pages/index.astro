@@ -1,0 +1,389 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="AsapGuide Tools — Free, Fast & Secure Web Utilities" 
+  description="Fast, secure, browser-based tools for AI developers and creators. No signup. No data sent."
+>
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">AsapGuide · Free Tools</p>
+      <h1 class="display">
+        The fastest <em class="accent">free tools</em><br/>for AI builders.
+      </h1>
+      <p class="sub">Browser-based. No signup. No data sent.</p>
+    </div>
+  </section>
+
+  <!-- ── Tools Grid ── -->
+  <section class="tools-section">
+    <div class="container">
+
+      <div class="bar">
+        <div class="tabs">
+          <button class="tab active" data-filter="all">All</button>
+          <button class="tab" data-filter="ai-tools">AI Tools</button>
+          <button class="tab" data-filter="developer-tools">Developer Tools</button>
+          <button class="tab" data-filter="utilities">Utilities</button>
+        </div>
+        <input type="text" id="tool-search" placeholder="Search tools…" aria-label="Search tools" />
+      </div>
+
+      <div class="grid" id="tools-grid">
+
+        <!-- MCP Config Merger — Live -->
+        <a href="/mcp-merger" class="card tool-card live" data-tags="ai-tools,developer-tools" data-title="mcp json config merger">
+          <div class="card-head">
+            <div class="icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 6H5a2 2 0 0 0-2 2v3"/><path d="M21 11V8a2 2 0 0 0-2-2h-3"/>
+                <path d="M16 18h3a2 2 0 0 0 2-2v-3"/><path d="M3 13v3a2 2 0 0 0 2 2h3"/>
+                <path d="M9 12h6"/><path d="M12 9v6"/>
+              </svg>
+            </div>
+            <span class="badge live-badge">Live</span>
+          </div>
+          <h2>MCP Config Merger</h2>
+          <p>Combine MCP server configs into one valid JSON — no manual editing required.</p>
+          <span class="cta">Open tool →</span>
+        </a>
+
+        <!-- LLM Token Counter — Live -->
+        <a href="/token-counter" class="card tool-card live" data-tags="ai-tools" data-title="llm token counter gpt-4o claude gemini">
+          <div class="card-head">
+            <div class="icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/>
+                <path d="m4.93 19.07 2.83-2.83"/><path d="M12 18v4"/>
+                <path d="m19.07 19.07-2.83-2.83"/><path d="M18 12h4"/><path d="m19.07 4.93-2.83 2.83"/>
+              </svg>
+            </div>
+            <span class="badge live-badge">Live</span>
+          </div>
+          <h2>LLM Token Counter</h2>
+          <p>Estimate token usage for GPT-4o, Claude, and Gemini instantly.</p>
+          <span class="cta">Open tool →</span>
+        </a>
+
+        <!-- LLM API Cost Calculator — Soon -->
+        <a href="#" class="card tool-card disabled" data-tags="ai-tools" data-title="llm api cost calculator openai anthropic gemini deepseek">
+          <div class="card-head">
+            <div class="icon dim">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <span class="badge soon-badge">Soon</span>
+          </div>
+          <h2>LLM API Cost Calculator</h2>
+          <p>Compare pricing across OpenAI, Anthropic, Gemini, and DeepSeek.</p>
+        </a>
+
+
+
+        <!-- JSON Formatter — Live -->
+        <a href="/json-formatter" class="card tool-card live" data-tags="developer-tools" data-title="json formatter beautifier minifier">
+          <div class="card-head">
+            <div class="icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              </svg>
+            </div>
+            <span class="badge live-badge">Live</span>
+          </div>
+          <h2>JSON Formatter</h2>
+          <p>Beautify, minify, and validate JSON instantly.</p>
+          <span class="cta">Open tool →</span>
+        </a>
+
+        <!-- HTML Viewer — Live -->
+        <a href="/html-viewer" class="card tool-card live" data-tags="developer-tools" data-title="html viewer preview sandbox live">
+          <div class="card-head">
+            <div class="icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 12l-2 2 2 2"/><path d="M14 12l2 2-2 2"/>
+              </svg>
+            </div>
+            <span class="badge live-badge">Live</span>
+          </div>
+          <h2>HTML Viewer</h2>
+          <p>Instantly preview your HTML, CSS, and JS in a live sandbox.</p>
+          <span class="cta">Open tool →</span>
+        </a>
+
+        <!-- Case Converter — Live -->
+        <a href="/case-converter" class="card tool-card live" data-tags="utilities" data-title="text case converter upper lower title">
+          <div class="card-head">
+            <div class="icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
+              </svg>
+            </div>
+            <span class="badge live-badge">Live</span>
+          </div>
+          <h2>Case Converter</h2>
+          <p>Convert text to camelCase, snake_case, Title Case, and more.</p>
+          <span class="cta">Open tool →</span>
+        </a>
+
+      </div><!-- /.grid -->
+
+      <div class="no-results" id="no-results" style="display:none">
+        <p>No tools match your search.</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const searchInput = document.getElementById('tool-search') as HTMLInputElement;
+    const tabs = document.querySelectorAll('.tab');
+    const cards = document.querySelectorAll('.tool-card');
+    const noResults = document.getElementById('no-results');
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    function filter() {
+      let count = 0;
+      cards.forEach((card) => {
+        const title = card.getAttribute('data-title') || '';
+        const tags = (card.getAttribute('data-tags') || '').split(',');
+        const show = title.includes(searchQuery) && (activeFilter === 'all' || tags.includes(activeFilter));
+        (card as HTMLElement).style.display = show ? '' : 'none';
+        if (show) count++;
+      });
+      if (noResults) noResults.style.display = count === 0 ? 'block' : 'none';
+    }
+
+    searchInput?.addEventListener('input', (e) => {
+      searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
+      filter();
+    });
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeFilter = tab.getAttribute('data-filter') || 'all';
+        filter();
+      });
+    });
+  </script>
+</Layout>
+
+<style>
+  /* ── Hero ── */
+  .hero {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 96px var(--spacing-md) 88px;
+  }
+
+  .hero-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  .display {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 7.5vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    color: var(--color-primary);
+    margin: 0;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .sub {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  /* ── Tools Section ── */
+  .tools-section {
+    padding-top: 48px;
+    padding-bottom: 80px;
+  }
+
+  /* ── Filter Bar ── */
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-md);
+    padding: 4px;
+  }
+
+  .tab {
+    background: none;
+    border: none;
+    font-family: var(--font-family);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--color-primary); }
+  .tab.active { background: var(--color-primary); color: #fff; }
+
+  #tool-search {
+    height: 40px;
+    width: 220px;
+    font-size: 0.88rem;
+    padding: 0 14px;
+    border-radius: var(--rounded-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-primary);
+    outline: none;
+    font-family: var(--font-family);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  #tool-search:focus {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8,102,255,0.1);
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+
+  /* ── Tool Cards ── */
+  .tool-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+
+  .tool-card.live {
+    border-color: rgba(8, 102, 255, 0.18);
+  }
+
+  .tool-card.live:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(8, 102, 255, 0.1);
+    border-color: rgba(8, 102, 255, 0.35);
+  }
+
+  .tool-card.soon {
+    opacity: 0.65;
+    cursor: default;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--rounded-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(8, 102, 255, 0.08);
+    color: var(--color-tertiary);
+    flex-shrink: 0;
+  }
+
+  .icon.dim {
+    background: rgba(96, 103, 112, 0.08);
+    color: var(--color-secondary);
+  }
+
+  .badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 99px;
+  }
+
+  .live-badge {
+    background: rgba(8, 102, 255, 0.08);
+    color: var(--color-tertiary);
+    border: 1px solid rgba(8, 102, 255, 0.18);
+  }
+
+  .soon-badge {
+    background: rgba(96, 103, 112, 0.08);
+    color: var(--color-secondary);
+    border: 1px solid var(--color-border);
+  }
+
+  .tool-card h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+  }
+
+  .tool-card p {
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+    line-height: 1.5;
+    margin: 0;
+    flex-grow: 1;
+  }
+
+  .cta {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-tertiary);
+    margin-top: 4px;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--color-secondary);
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 600px) {
+    .hero { padding: 64px var(--spacing-md) 56px; }
+    .bar { flex-direction: column; align-items: flex-start; }
+    #tool-search { width: 100%; }
+  }
+</style>

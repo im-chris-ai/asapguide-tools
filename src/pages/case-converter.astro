@@ -1,0 +1,725 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="Case Converter - Convert Upper Case, Lower Case, Title Case | AsapGuide" 
+  description="Convert your text to any case instantly: Upper Case, Lower Case, Title Case, camelCase, snake_case, PascalCase, and more. Online, free, and secure."
+>
+
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">Utilities</p>
+    <h1 class="tool-title">Case <em class="accent">Converter</em></h1>
+    <p class="tool-desc">Change the capitalization of your text instantly. Supports standard text cases and developer naming styles.</p>
+  </div>
+
+  <!-- ── Main Workspace ── -->
+  <div class="workspace">
+
+    <!-- Editor Grid -->
+    <div class="editor-grid">
+
+      <!-- Panel 1: Input -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <h2>Input Text</h2>
+          </div>
+        </div>
+
+        <div class="input-container" id="input-container">
+          <!-- Input Sub-toolbar for Symmetry -->
+          <div class="editor-toolbar">
+            <span class="toolbar-label">Source Text</span>
+            <div class="toolbar-actions">
+              <button id="btn-sample" class="btn-toolbar">Sample</button>
+              <button id="btn-clear" class="btn-toolbar">Clear</button>
+            </div>
+          </div>
+          
+          <textarea
+            id="text-input"
+            placeholder="Type or paste your text here..."
+            spellcheck="false"
+          ></textarea>
+          <div class="input-footer">
+            <span class="footer-stats" id="input-stats">0 chars | 0 words | 0 lines</span>
+            <span class="footer-status" id="input-status">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Output -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <h2>Converted Output</h2>
+          </div>
+          <div class="panel-bar-right">
+            <button id="btn-download" class="btn-ghost" disabled>Download</button>
+            <button id="btn-copy" class="btn-primary" disabled>Copy Output</button>
+          </div>
+        </div>
+
+        <div class="input-container" id="output-container">
+          <!-- Output Sub-toolbar for Controls -->
+          <div class="editor-toolbar">
+            <div class="segmented-control" id="segmented-cases">
+              <button class="segment-btn active" data-case="sentence">Sentence</button>
+              <button class="segment-btn" data-case="lower">Lower</button>
+              <button class="segment-btn" data-case="upper">Upper</button>
+              <button class="segment-btn" data-case="title">Title</button>
+            </div>
+            <select id="select-case-special" class="select-compact" aria-label="Special case conversions">
+              <option value="">More Cases...</option>
+              <option value="camel">camelCase</option>
+              <option value="snake">snake_case</option>
+              <option value="pascal">PascalCase</option>
+              <option value="kebab">kebab-case</option>
+              <option value="constant">CONSTANT_CASE</option>
+              <option value="alternating">Alternating Case</option>
+              <option value="capitalized">Capitalize Each Word</option>
+            </select>
+          </div>
+
+          <textarea
+            id="text-output"
+            placeholder="Converted text will appear here automatically..."
+            readonly
+            spellcheck="false"
+          ></textarea>
+          <div class="input-footer">
+            <span class="footer-stats" id="output-stats">0 chars | 0 words | 0 lines</span>
+            <span class="footer-status" id="output-status">Waiting for input</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.editor-grid -->
+
+  </div><!-- /.workspace -->
+
+  <!-- ── SEO Guide ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>How the Case Converter Works</h2>
+      <p>This formatting utility runs fully inside your browser to convert text strings between capitalizations. Standard styling structures (like Title Case and Sentence Case) are useful for writers, content creators, and editors. On the other hand, formats like camelCase or snake_case are essential for developers writing code, configuring APIs, or structuring database keys.</p>
+
+      <h3>Supported Case Conversions</h3>
+      <p>Our utility supports multiple formats grouped by use case:</p>
+      <ul>
+        <li><strong>Sentence case:</strong> Capitalizes the first letter of each sentence and lowers everything else. It matches standard sentence structures after periods, question marks, and exclamation marks.</li>
+        <li><strong>lower case:</strong> Converts all characters in the text to lowercase.</li>
+        <li><strong>UPPER CASE:</strong> Converts all characters in the text to uppercase.</li>
+        <li><strong>Title Case:</strong> Capitalizes major words according to AP style. Articles, short prepositions, and conjunctions (such as "the", "and", "a", "of", "to") remain in lowercase unless they start or end the title.</li>
+        <li><strong>Capitalize Each Word:</strong> Capitalizes the very first letter of every single word, including minor words.</li>
+        <li><strong>camelCase:</strong> Converts text to programming notation where words are concatenated and subsequent words start capitalized (e.g. <code>myVariableName</code>).</li>
+        <li><strong>snake_case:</strong> Joins words with underscores in all lowercase (e.g. <code>my_variable_name</code>).</li>
+        <li><strong>PascalCase:</strong> Concatenates all words and capitalizes the first letter of each word (e.g. <code>MyClassName</code>).</li>
+        <li><strong>kebab-case:</strong> Connects words using hyphens in all lowercase (e.g. <code>my-style-class</code>).</li>
+        <li><strong>CONSTANT_CASE:</strong> Joins words with underscores in all uppercase (e.g. <code>MY_GLOBAL_CONSTANT</code>).</li>
+        <li><strong>Alternating Case:</strong> Alternates the case of letters throughout the text (e.g. <code>tExT cAsE cOnVeRtEr</code>).</li>
+      </ul>
+
+      <h3>100% Local and Secure Processing</h3>
+      <p>Your inputs are processed purely client-side using JavaScript. No information is sent to a backend server. This local-only design ensures that confidential business documents, proprietary source code, or personal drafts can be formatted securely without data leak vulnerabilities.</p>
+    </article>
+  </div>
+
+</Layout>
+
+<script>
+  const textInput = document.getElementById('text-input') as HTMLTextAreaElement;
+  const textOutput = document.getElementById('text-output') as HTMLTextAreaElement;
+  
+  const btnSample = document.getElementById('btn-sample') as HTMLButtonElement;
+  const btnClear = document.getElementById('btn-clear') as HTMLButtonElement;
+  const btnDownload = document.getElementById('btn-download') as HTMLButtonElement;
+  const btnCopy = document.getElementById('btn-copy') as HTMLButtonElement;
+  
+  const selectSpecial = document.getElementById('select-case-special') as HTMLSelectElement;
+  const segmentedControl = document.getElementById('segmented-cases') as HTMLDivElement;
+  const segmentBtns = segmentedControl.querySelectorAll('.segment-btn');
+  
+  const inputContainer = document.getElementById('input-container') as HTMLDivElement;
+  const outputContainer = document.getElementById('output-container') as HTMLDivElement;
+  
+  const inputStats = document.getElementById('input-stats') as HTMLElement;
+  const inputStatus = document.getElementById('input-status') as HTMLElement;
+  const outputStats = document.getElementById('output-stats') as HTMLElement;
+  const outputStatus = document.getElementById('output-status') as HTMLElement;
+  
+  let currentCase: string = 'sentence';
+  
+  const SAMPLE_TEXT = `this is a sample paragraph. it has multiple sentences! here is another one. also, some variables: camelCaseVariable, snake_case_variable, and CONSTANT_CASE_VARIABLE.`;
+
+  function formatNumber(num: number): string {
+    return new Intl.NumberFormat('en-US').format(num);
+  }
+
+  function getStatsString(val: string): string {
+    const chars = val.length;
+    const trimmed = val.trim();
+    const words = trimmed ? trimmed.split(/\s+/).length : 0;
+    const lines = val ? val.split('\n').length : 0;
+    return `${formatNumber(chars)} chars | ${formatNumber(words)} words | ${formatNumber(lines)} lines`;
+  }
+
+  // --- String Conversions ---
+
+  function toSentenceCase(str: string): string {
+    let s = str.toLowerCase();
+    // Capitalize first character of string, first character after sentence-ending punctuation followed by spacing, or after newlines.
+    return s.replace(/(^\s*|[.!?]\s+|\r?\n\s*)([a-z\u00C0-\u00FF])/g, (match, separator, char) => separator + char.toUpperCase());
+  }
+
+  function toTitleCase(str: string): string {
+    const minorWords = new Set(['a', 'an', 'the', 'and', 'but', 'for', 'so', 'nor', 'to', 'of', 'at', 'by', 'from', 'in', 'on', 'with', 'as', 'per', 'is']);
+    return str.split('\n').map(line => {
+      let words = line.split(/(\s+)/);
+      return words.map((word, index, arr) => {
+        if (/^\s*$/.test(word)) return word;
+        
+        const cleanWord = word.replace(/[^a-zA-Z0-9\u00C0-\u00FF]/g, '').toLowerCase();
+        
+        const nonSpaceWords = arr.filter(w => !/^\s*$/.test(w));
+        const nonSpaceIndex = nonSpaceWords.findIndex(w => w === word);
+        const isFirst = nonSpaceIndex === 0;
+        const isLast = nonSpaceIndex === nonSpaceWords.length - 1;
+        
+        if (minorWords.has(cleanWord) && !isFirst && !isLast) {
+          return word.toLowerCase();
+        }
+        
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }).join('');
+    }).join('\n');
+  }
+
+  function toCapitalizedCase(str: string): string {
+    return str.split('\n').map(line => {
+      return line.split(/(\s+)/).map(word => {
+        if (/^\s*$/.test(word)) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }).join('');
+    }).join('\n');
+  }
+
+  function extractWords(str: string): string[] {
+    let s = str.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+    s = s.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
+    s = s.replace(/[_\-\.\/]/g, ' ');
+    return s.trim().split(/\s+/).filter(Boolean);
+  }
+
+  function getCleanWords(str: string): string[] {
+    return extractWords(str).map(w => w.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean);
+  }
+
+  function toCamelCase(str: string): string {
+    const words = getCleanWords(str);
+    if (words.length === 0) return '';
+    return words[0].toLowerCase() + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+  }
+
+  function toPascalCase(str: string): string {
+    return getCleanWords(str).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+  }
+
+  function toSnakeCase(str: string): string {
+    return getCleanWords(str).map(w => w.toLowerCase()).join('_');
+  }
+
+  function toKebabCase(str: string): string {
+    return getCleanWords(str).map(w => w.toLowerCase()).join('-');
+  }
+
+  function toConstantCase(str: string): string {
+    return getCleanWords(str).map(w => w.toUpperCase()).join('_');
+  }
+
+  function toAlternatingCase(str: string): string {
+    let result = '';
+    let upper = false;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charAt(i);
+      if (/[a-zA-Z]/.test(char)) {
+        result += upper ? char.toUpperCase() : char.toLowerCase();
+        upper = !upper;
+      } else {
+        result += char;
+      }
+    }
+    return result;
+  }
+
+  // --- Execution & State Updates ---
+
+  function convertText() {
+    const rawVal = textInput.value;
+    
+    // Update stats
+    inputStats.textContent = getStatsString(rawVal);
+    
+    if (!rawVal.trim()) {
+      // Empty state
+      textOutput.value = '';
+      outputStats.textContent = getStatsString('');
+      
+      inputContainer.classList.remove('is-valid');
+      outputContainer.classList.remove('is-valid');
+      
+      inputStatus.textContent = 'Ready';
+      outputStatus.textContent = 'Waiting for input';
+      
+      btnDownload.disabled = true;
+      btnCopy.disabled = true;
+      return;
+    }
+    
+    // Valid input state
+    inputContainer.classList.add('is-valid');
+    outputContainer.classList.add('is-valid');
+    
+    inputStatus.textContent = '✓ Input Active';
+    
+    let result = '';
+    let displayCaseName = '';
+    
+    switch (currentCase) {
+      case 'sentence':
+        result = toSentenceCase(rawVal);
+        displayCaseName = 'Sentence Case';
+        break;
+      case 'lower':
+        result = rawVal.toLowerCase();
+        displayCaseName = 'lowercase';
+        break;
+      case 'upper':
+        result = rawVal.toUpperCase();
+        displayCaseName = 'UPPERCASE';
+        break;
+      case 'title':
+        result = toTitleCase(rawVal);
+        displayCaseName = 'Title Case';
+        break;
+      case 'camel':
+        result = toCamelCase(rawVal);
+        displayCaseName = 'camelCase';
+        break;
+      case 'snake':
+        result = toSnakeCase(rawVal);
+        displayCaseName = 'snake_case';
+        break;
+      case 'pascal':
+        result = toPascalCase(rawVal);
+        displayCaseName = 'PascalCase';
+        break;
+      case 'kebab':
+        result = toKebabCase(rawVal);
+        displayCaseName = 'kebab-case';
+        break;
+      case 'constant':
+        result = toConstantCase(rawVal);
+        displayCaseName = 'CONSTANT_CASE';
+        break;
+      case 'alternating':
+        result = toAlternatingCase(rawVal);
+        displayCaseName = 'Alternating Case';
+        break;
+      case 'capitalized':
+        result = toCapitalizedCase(rawVal);
+        displayCaseName = 'Capitalize Each Word';
+        break;
+      default:
+        result = rawVal;
+        displayCaseName = 'Unchanged';
+    }
+    
+    textOutput.value = result;
+    outputStats.textContent = getStatsString(result);
+    outputStatus.textContent = `Converted to ${displayCaseName}`;
+    
+    btnDownload.disabled = false;
+    btnCopy.disabled = false;
+  }
+
+  // --- Listeners ---
+
+  let timeout: any;
+  textInput.addEventListener('input', () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(convertText, 100);
+  });
+
+  btnSample.addEventListener('click', () => {
+    textInput.value = SAMPLE_TEXT;
+    convertText();
+  });
+
+  btnClear.addEventListener('click', () => {
+    textInput.value = '';
+    convertText();
+    textInput.focus();
+  });
+
+  // Segmented control click handlers
+  segmentBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Clear active styling from all segments
+      segmentBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Update state
+      currentCase = btn.getAttribute('data-case') || 'sentence';
+      // Reset special select dropdown since segmented is active
+      selectSpecial.value = '';
+      
+      convertText();
+    });
+  });
+
+  // Special select change handler
+  selectSpecial.addEventListener('change', () => {
+    const val = selectSpecial.value;
+    if (!val) return; // Ignore blank select
+    
+    // Clear active styling from segmented buttons
+    segmentBtns.forEach(b => b.classList.remove('active'));
+    
+    // Update state
+    currentCase = val;
+    convertText();
+  });
+
+  btnCopy.addEventListener('click', () => {
+    if (!textOutput.value) return;
+    navigator.clipboard.writeText(textOutput.value);
+    const orig = btnCopy.textContent;
+    btnCopy.textContent = 'Copied!';
+    setTimeout(() => { btnCopy.textContent = orig; }, 1500);
+  });
+
+  btnDownload.addEventListener('click', () => {
+    if (!textOutput.value) return;
+    const blob = new Blob([textOutput.value], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `converted-${currentCase}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // Initial run
+  convertText();
+</script>
+
+<style>
+  /* ── Hero ── */
+  .tool-hero {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 64px 24px 56px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 14px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  /* ── Workspace ── */
+  .workspace {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── Editor Grid ── */
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .editor-grid { grid-template-columns: 1fr; }
+  }
+
+  .editor-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+    flex-wrap: wrap;
+  }
+
+  .panel-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .panel-bar-left h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .panel-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* Buttons & Selects */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+  .panel-bar-right .btn-primary {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  /* Sub-toolbar inside input/output containers */
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F5F7FA;
+    border-bottom: 1px solid var(--color-border);
+    padding: 6px 12px;
+    min-height: 40px;
+    gap: 12px;
+    user-select: none;
+  }
+
+  .toolbar-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-toolbar {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .btn-toolbar:hover {
+    background: rgba(28, 43, 51, 0.06);
+    color: var(--color-primary);
+  }
+
+  /* Segmented Control for mode toggles */
+  .segmented-control {
+    display: flex;
+    background: rgba(28, 43, 51, 0.06);
+    padding: 2px;
+    border-radius: var(--rounded-sm);
+  }
+
+  .segment-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-family);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+
+  .segment-btn:hover {
+    color: var(--color-primary);
+  }
+
+  .segment-btn.active {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .select-compact {
+    display: inline-flex;
+    align-items: center;
+    height: 25px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 0 6px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s;
+  }
+  .select-compact:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+  /* Input Container Pattern */
+  .input-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    height: 420px;
+  }
+
+  .input-container:focus-within {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+  }
+
+  /* Validation/Active states */
+  .input-container.is-valid {
+    border-color: var(--color-tertiary);
+  }
+  .input-container.is-valid:focus-within {
+    box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+  }
+
+  textarea {
+    width: 100%;
+    flex: 1;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: none;
+    padding: 16px;
+    background: transparent;
+    color: var(--color-primary);
+    border: none;
+    outline: none;
+    overflow-y: auto;
+  }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    color: var(--color-secondary);
+    transition: background-color 0.15s, color 0.15s;
+    user-select: none;
+  }
+
+  .input-container.is-valid .input-footer {
+    background-color: rgba(8, 102, 255, 0.03);
+    color: var(--color-secondary);
+  }
+
+  .footer-stats {
+    font-weight: 500;
+  }
+
+  .footer-status {
+    font-weight: 600;
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* ── Extreme Mobile Fixes ── */
+  @media (max-width: 480px) {
+    .panel-bar { flex-wrap: wrap; height: auto; gap: 8px; }
+    .panel-bar-right { width: 100%; justify-content: flex-end; }
+    .workspace { padding: 24px 16px 40px; }
+    .tool-hero { padding: 40px 16px 32px; }
+    .input-container { height: 350px; }
+  }
+</style>

@@ -1,0 +1,629 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="JSON Formatter & Minifier - Format, Beautify, and Clean JSON | AsapGuide" 
+  description="Clean, format, minify, and validate JSON data instantly. Supports custom indentation and offline-first processing for complete security."
+>
+
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">Developer Tools</p>
+    <h1 class="tool-title">JSON <em class="accent">Formatter</em> & Minifier</h1>
+    <p class="tool-desc">Beautify, validate, and minify your JSON data in real time. Runs 100% locally in your browser.</p>
+  </div>
+
+  <!-- ── Main Workspace ── -->
+  <div class="workspace">
+
+    <!-- Editor Grid -->
+    <div class="editor-grid">
+
+      <!-- Panel 1: Input -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <h2>JSON Input</h2>
+          </div>
+        </div>
+
+        <div class="input-container" id="input-container">
+          <!-- Input Sub-toolbar for Symmetry -->
+          <div class="editor-toolbar">
+            <span class="toolbar-label">Source Editor</span>
+            <div class="toolbar-actions">
+              <button id="btn-sample" class="btn-toolbar">Sample</button>
+              <button id="btn-clear" class="btn-toolbar">Clear</button>
+            </div>
+          </div>
+          
+          <textarea
+            id="json-input"
+            placeholder="Paste your raw, unformatted, or messy JSON here..."
+            spellcheck="false"
+          ></textarea>
+          <div class="input-footer">
+            <span class="footer-stats" id="input-stats">0 chars | 0 lines</span>
+            <span class="footer-status" id="input-status">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Output -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <h2>Result Output</h2>
+          </div>
+          <div class="panel-bar-right">
+            <button id="btn-download" class="btn-ghost" disabled>Download</button>
+            <button id="btn-copy" class="btn-primary" disabled>Copy Output</button>
+          </div>
+        </div>
+
+        <div class="input-container" id="output-container">
+          <!-- Output Sub-toolbar for Controls -->
+          <div class="editor-toolbar">
+            <div class="segmented-control">
+              <button id="btn-mode-beautify" class="segment-btn active">Beautify</button>
+              <button id="btn-mode-minify" class="segment-btn">Minify</button>
+            </div>
+            <select id="select-indent" class="select-compact" aria-label="Indentation spacing">
+              <option value="2">2 Spaces</option>
+              <option value="4">4 Spaces</option>
+              <option value="tab">Tabs</option>
+            </select>
+          </div>
+
+          <textarea
+            id="json-output"
+            placeholder="Output will appear here automatically..."
+            readonly
+            spellcheck="false"
+          ></textarea>
+          <div class="input-footer">
+            <span class="footer-stats" id="output-stats">0 chars | 0 lines</span>
+            <span class="footer-status" id="output-status">Waiting for input</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.editor-grid -->
+
+  </div><!-- /.workspace -->
+
+  <!-- ── SEO Guide ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>How the JSON Formatter & Minifier Works</h2>
+      <p>This developer utility parses your JSON data and helps make it readable or compact. Using the native Web JSON API, the tool runs directly in your web browser. This ensures that no data leaves your computer, making it suitable for private configuration files, API payloads, and internal database structures.</p>
+
+      <h3>What is JSON?</h3>
+      <p>JSON (JavaScript Object Notation) is a lightweight, text-based data interchange format. It is easy for humans to read and write and easy for machines to parse and generate. JSON is built on two structures:</p>
+      <ul>
+        <li>A collection of name/value pairs (realized as an object, associative array, or dictionary).</li>
+        <li>An ordered list of values (realized as an array or list).</li>
+      </ul>
+
+      <h3>Beautify vs. Minify</h3>
+      <p>Depending on your current task, you may need to switch how your JSON is presented:</p>
+      <ul>
+        <li><strong>Beautify (Format):</strong> Adds line breaks and indentation (spaces or tabs) to raw JSON payloads. This makes it readable, allowing you to easily debug configurations, inspect nested structures, and verify key-value pairs.</li>
+        <li><strong>Minify (Compress):</strong> Strips all unnecessary whitespace, newlines, and indentation from the JSON file. This reduces payload sizes and is useful for production deployments, optimizing API requests, and saving storage space.</li>
+      </ul>
+
+      <h3>100% Private and Secure</h3>
+      <p>Many online tools upload your data to a remote server for processing. This tool runs <strong>fully client-side</strong>. Your JSON payloads are processed directly in your local browser sandbox and are never transmitted over the internet. You can securely format credentials, system configs, or user records without exposure risks.</p>
+
+      <h3>Common JSON Formatting Errors</h3>
+      <p>If the formatter detects invalid JSON, it will flag the issue. Watch out for these common parsing pitfalls:</p>
+      <ul>
+        <li><strong>Trailing Commas:</strong> Standard JSON does not permit trailing commas after the last item in objects or arrays (e.g., <code>{`{"key": "val",}`}</code> is invalid).</li>
+        <li><strong>Single Quotes:</strong> All keys and string values in JSON must be enclosed in double quotes (e.g., <code>"key": "value"</code>). Single quotes will cause a syntax error.</li>
+        <li><strong>Missing Quotes:</strong> Object keys must always be strings enclosed in double quotes. Unquoted keys are not valid JSON.</li>
+        <li><strong>Unbalanced Brackets:</strong> Every opening brace <code>{</code> or bracket <code>[</code> must have a corresponding closing pair.</li>
+      </ul>
+    </article>
+  </div>
+
+</Layout>
+
+<script>
+  const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
+  const jsonOutput = document.getElementById('json-output') as HTMLTextAreaElement;
+  
+  const btnSample = document.getElementById('btn-sample') as HTMLButtonElement;
+  const btnClear = document.getElementById('btn-clear') as HTMLButtonElement;
+  
+  const btnModeBeautify = document.getElementById('btn-mode-beautify') as HTMLButtonElement;
+  const btnModeMinify = document.getElementById('btn-mode-minify') as HTMLButtonElement;
+  const btnDownload = document.getElementById('btn-download') as HTMLButtonElement;
+  const btnCopy = document.getElementById('btn-copy') as HTMLButtonElement;
+  
+  const selectIndent = document.getElementById('select-indent') as HTMLSelectElement;
+  
+  const inputContainer = document.getElementById('input-container') as HTMLDivElement;
+  const outputContainer = document.getElementById('output-container') as HTMLDivElement;
+  
+  const inputStats = document.getElementById('input-stats') as HTMLElement;
+  const inputStatus = document.getElementById('input-status') as HTMLElement;
+  const outputStats = document.getElementById('output-stats') as HTMLElement;
+  const outputStatus = document.getElementById('output-status') as HTMLElement;
+  
+  let currentMode: 'beautify' | 'minify' = 'beautify';
+  let currentIndent: string = '2';
+  
+  const SAMPLE_JSON = JSON.stringify({
+    "name": "AsapGuide Tools",
+    "version": "1.0.0",
+    "description": "Fast, secure, and evergreen developer tools.",
+    "open_source": true,
+    "tags": [
+      "JSON",
+      "Formatter",
+      "Minifier",
+      "Offline-first"
+    ],
+    "stats": {
+      "speed": "instant",
+      "security": "100% local"
+    }
+  }, null, 2);
+
+  function formatNumber(num: number): string {
+    return new Intl.NumberFormat('en-US').format(num);
+  }
+
+  function getStatsString(val: string): string {
+    const chars = val.length;
+    const lines = val ? val.split('\n').length : 0;
+    return `${formatNumber(chars)} chars | ${formatNumber(lines)} lines`;
+  }
+
+  function processJSON() {
+    const rawVal = jsonInput.value;
+    
+    // Update input stats
+    inputStats.textContent = getStatsString(rawVal);
+    
+    if (!rawVal.trim()) {
+      // Empty state
+      jsonOutput.value = '';
+      outputStats.textContent = getStatsString('');
+      
+      inputContainer.classList.remove('is-valid', 'is-invalid');
+      outputContainer.classList.remove('is-valid', 'is-invalid');
+      
+      inputStatus.textContent = 'Ready';
+      outputStatus.textContent = 'Waiting for input';
+      
+      btnDownload.disabled = true;
+      btnCopy.disabled = true;
+      return;
+    }
+    
+    try {
+      const parsed = JSON.parse(rawVal);
+      
+      // Update UI classes for valid state
+      inputContainer.classList.remove('is-invalid');
+      inputContainer.classList.add('is-valid');
+      outputContainer.classList.remove('is-invalid');
+      outputContainer.classList.add('is-valid');
+      
+      inputStatus.textContent = '✓ Valid JSON';
+      
+      let result = '';
+      if (currentMode === 'beautify') {
+        const indent = currentIndent === 'tab' ? '\t' : parseInt(currentIndent, 10);
+        result = JSON.stringify(parsed, null, indent);
+        outputStatus.textContent = `Beautified (Indent: ${currentIndent})`;
+      } else {
+        result = JSON.stringify(parsed);
+        outputStatus.textContent = 'Minified';
+      }
+      
+      jsonOutput.value = result;
+      outputStats.textContent = getStatsString(result);
+      
+      btnDownload.disabled = false;
+      btnCopy.disabled = false;
+    } catch (e: any) {
+      // Invalid state
+      inputContainer.classList.remove('is-valid');
+      inputContainer.classList.add('is-invalid');
+      outputContainer.classList.remove('is-valid', 'is-invalid');
+      
+      inputStatus.textContent = `✗ ${e.message}`;
+      
+      jsonOutput.value = '';
+      outputStats.textContent = getStatsString('');
+      outputStatus.textContent = 'Fix input errors';
+      
+      btnDownload.disabled = true;
+      btnCopy.disabled = true;
+    }
+  }
+
+  // Event Listeners
+  let timeout: number;
+  jsonInput.addEventListener('input', () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(processJSON, 150) as any;
+  });
+
+  btnSample.addEventListener('click', () => {
+    jsonInput.value = SAMPLE_JSON;
+    processJSON();
+  });
+
+  btnClear.addEventListener('click', () => {
+    jsonInput.value = '';
+    processJSON();
+    jsonInput.focus();
+  });
+
+  btnModeBeautify.addEventListener('click', () => {
+    currentMode = 'beautify';
+    btnModeBeautify.classList.add('active');
+    btnModeMinify.classList.remove('active');
+    selectIndent.style.display = ''; // Show indent select
+    processJSON();
+  });
+
+  btnModeMinify.addEventListener('click', () => {
+    currentMode = 'minify';
+    btnModeMinify.classList.add('active');
+    btnModeBeautify.classList.remove('active');
+    selectIndent.style.display = 'none'; // Hide indent select
+    processJSON();
+  });
+
+  selectIndent.addEventListener('change', () => {
+    currentIndent = selectIndent.value;
+    processJSON();
+  });
+
+  btnCopy.addEventListener('click', () => {
+    if (!jsonOutput.value) return;
+    navigator.clipboard.writeText(jsonOutput.value);
+    const orig = btnCopy.textContent;
+    btnCopy.textContent = 'Copied!';
+    setTimeout(() => { btnCopy.textContent = orig; }, 1500);
+  });
+
+  btnDownload.addEventListener('click', () => {
+    if (!jsonOutput.value) return;
+    const blob = new Blob([jsonOutput.value], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentMode === 'beautify' ? 'formatted.json' : 'minified.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // Initial run
+  processJSON();
+</script>
+
+<style>
+  /* ── Hero ── */
+  .tool-hero {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 64px 24px 56px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 14px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  /* ── Workspace ── */
+  .workspace {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── Editor Grid ── */
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .editor-grid { grid-template-columns: 1fr; }
+  }
+
+  .editor-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+    flex-wrap: wrap;
+  }
+
+  .panel-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .panel-bar-left h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .panel-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* Buttons & Selects */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+  .panel-bar-right .btn-primary {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  /* Sub-toolbar inside input/output containers */
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F5F7FA;
+    border-bottom: 1px solid var(--color-border);
+    padding: 6px 12px;
+    min-height: 40px;
+    gap: 12px;
+    user-select: none;
+  }
+
+  .toolbar-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-toolbar {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .btn-toolbar:hover {
+    background: rgba(28, 43, 51, 0.06);
+    color: var(--color-primary);
+  }
+
+  /* Segmented Control for mode toggles */
+  .segmented-control {
+    display: flex;
+    background: rgba(28, 43, 51, 0.06);
+    padding: 2px;
+    border-radius: var(--rounded-sm);
+  }
+
+  .segment-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-family);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+
+  .segment-btn:hover {
+    color: var(--color-primary);
+  }
+
+  .segment-btn.active {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .select-compact {
+    display: inline-flex;
+    align-items: center;
+    height: 25px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 0 6px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s;
+  }
+  .select-compact:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+  /* Input Container Pattern */
+  .input-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    height: 420px;
+  }
+
+  .input-container:focus-within {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+  }
+
+  /* Validation states */
+  .input-container.is-valid {
+    border-color: var(--color-success);
+  }
+  .input-container.is-valid:focus-within {
+    box-shadow: 0 0 0 3px rgba(29, 164, 98, 0.1);
+  }
+
+  .input-container.is-invalid {
+    border-color: var(--color-error);
+  }
+  .input-container.is-invalid:focus-within {
+    box-shadow: 0 0 0 3px rgba(228, 23, 73, 0.1);
+  }
+
+  textarea {
+    width: 100%;
+    flex: 1;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    resize: none;
+    padding: 16px;
+    background: transparent;
+    color: var(--color-primary);
+    border: none;
+    outline: none;
+    overflow-y: auto;
+  }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    color: var(--color-secondary);
+    transition: background-color 0.15s, color 0.15s;
+    user-select: none;
+  }
+
+  .input-container.is-valid .input-footer {
+    background-color: rgba(29, 164, 98, 0.04);
+    color: var(--color-success);
+  }
+
+  .input-container.is-invalid .input-footer {
+    background-color: rgba(228, 23, 73, 0.04);
+    color: var(--color-error);
+  }
+
+  .footer-stats {
+    font-weight: 500;
+  }
+
+  .footer-status {
+    font-weight: 600;
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* ── Extreme Mobile Fixes ── */
+  @media (max-width: 480px) {
+    .panel-bar { flex-wrap: wrap; height: auto; gap: 8px; }
+    .panel-bar-right { width: 100%; justify-content: flex-end; }
+    .workspace { padding: 24px 16px 40px; }
+    .tool-hero { padding: 40px 16px 32px; }
+    .input-container { height: 350px; }
+  }
+</style>

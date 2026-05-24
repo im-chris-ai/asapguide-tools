@@ -1,0 +1,428 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="Live HTML Viewer & Editor | AsapGuide" 
+  description="Instantly preview HTML, CSS, and JavaScript right in your browser. Features a live live-updating preview and full-screen testing mode."
+>
+
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">Developer Tools</p>
+    <h1 class="tool-title">HTML <em class="accent">Viewer</em></h1>
+    <p class="tool-desc">Paste your HTML, CSS, and JS to instantly preview it live.</p>
+  </div>
+
+  <!-- ── Main Workspace ── -->
+  <div class="workspace">
+
+    <div class="editor-grid">
+
+      <!-- Panel 1: Code Editor -->
+      <div class="editor-panel code-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <span class="step-num">1</span>
+            <h2>HTML Code</h2>
+          </div>
+          <div class="panel-bar-right">
+            <button id="btn-format" class="btn-ghost">Format</button>
+            <button id="btn-clear" class="btn-ghost">Clear</button>
+          </div>
+        </div>
+        
+        <textarea id="html-input" spellcheck="false" placeholder="Paste your HTML code here..."></textarea>
+      </div>
+
+      <!-- Panel 2: Live Preview -->
+      <div class="editor-panel preview-panel" id="preview-container">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <span class="step-num">2</span>
+            <h2>Live Preview</h2>
+          </div>
+          <div class="panel-bar-right">
+            <button id="btn-fullscreen" class="btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+              </svg>
+              Full Screen
+            </button>
+          </div>
+        </div>
+        
+        <!-- The secure iframe sandbox -->
+        <div class="iframe-wrapper">
+          <iframe id="preview-frame" sandbox="allow-scripts allow-modals"></iframe>
+          <button id="btn-exit-fullscreen" class="btn-exit-fullscreen">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+            </svg>
+            Exit Full Screen
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ── SEO Article ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>How to use the HTML Viewer</h2>
+      <p>This tool provides an instant, secure sandbox to test your HTML, CSS, and JavaScript. Everything runs entirely in your browser, meaning your code is never sent to any server.</p>
+
+      <h3>Real-time Preview</h3>
+      <p>As you type or paste code into the left panel, the iframe on the right updates automatically. We use a short delay to prevent the preview from flickering while you're actively typing.</p>
+
+      <h3>Full Screen Mode</h3>
+      <p>Building a responsive layout? Click the <strong>Full Screen</strong> button to expand the preview to fill your entire monitor. This allows you to accurately test media queries and viewport units. You can exit full screen at any time using the floating button.</p>
+
+      <h3>Security</h3>
+      <p>The preview renders inside an isolated <code>&lt;iframe&gt;</code> using the <code>sandbox</code> attribute. Scripts are allowed to run so your JavaScript functions work, but the iframe is completely detached from the main AsapGuide domain, preventing cross-site scripting (XSS) risks.</p>
+    </article>
+  </div>
+
+</Layout>
+
+<style>
+  /* ── Hero ── */
+  .tool-hero {
+    background: var(--color-surface);
+    padding: 64px 24px 56px;
+    text-align: center;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-secondary);
+    margin-bottom: 16px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    color: var(--color-primary);
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1.1rem;
+    color: var(--color-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── Workspace ── */
+  .workspace {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Editor Grid ── */
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .editor-panel {
+    background: var(--color-neutral);
+    border-radius: var(--rounded-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── Panel Bar ── */
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+  }
+
+  .panel-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .panel-bar-left h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .panel-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Buttons */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+  .panel-bar-right .btn-primary {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  /* Textarea */
+  textarea {
+    width: 100%;
+    height: calc(100vh - 400px);
+    min-height: 400px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    resize: none;
+    padding: 16px;
+    background: var(--color-surface);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  textarea:focus {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8,102,255,0.1);
+  }
+
+  /* Iframe Wrapper */
+  .iframe-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 400px);
+    min-height: 400px;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #fff;
+  }
+
+  .btn-exit-fullscreen {
+    display: none;
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    align-items: center;
+    transition: background 0.15s, transform 0.1s;
+    z-index: 10000;
+  }
+
+  .btn-exit-fullscreen:hover { background: #000; }
+  .btn-exit-fullscreen:active { transform: translateX(-50%) scale(0.97); }
+
+  /* ── Fullscreen Mode ── */
+  .preview-panel.fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--color-surface);
+    border-radius: 0;
+    padding: 0;
+  }
+  
+  .preview-panel.fullscreen .panel-bar {
+    display: none; /* Hide the panel bar when full screen */
+  }
+
+  .preview-panel.fullscreen .iframe-wrapper {
+    height: 100%;
+    border: none;
+    border-radius: 0;
+  }
+
+  .preview-panel.fullscreen .btn-exit-fullscreen {
+    display: inline-flex;
+  }
+
+  /* ── Extreme Mobile Fixes ── */
+  @media (max-width: 900px) {
+    .editor-grid { grid-template-columns: 1fr; }
+    textarea, .iframe-wrapper { height: 400px; }
+  }
+
+  @media (max-width: 480px) {
+    .panel-bar { flex-wrap: wrap; height: auto; gap: 8px; }
+    .panel-bar-right { width: 100%; justify-content: flex-start; }
+    .workspace { padding: 24px 16px 40px; }
+    .tool-hero { padding: 40px 16px 32px; }
+  }
+</style>
+
+<script>
+  const htmlInput = document.getElementById('html-input') as HTMLTextAreaElement;
+  const previewFrame = document.getElementById('preview-frame') as HTMLIFrameElement;
+  const btnFormat = document.getElementById('btn-format') as HTMLButtonElement;
+  const btnClear = document.getElementById('btn-clear') as HTMLButtonElement;
+  
+  const previewPanel = document.getElementById('preview-container') as HTMLDivElement;
+  const btnFullscreen = document.getElementById('btn-fullscreen') as HTMLButtonElement;
+  const btnExitFullscreen = document.getElementById('btn-exit-fullscreen') as HTMLButtonElement;
+
+  const defaultTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f2f5;
+      color: #1c2b33;
+    }
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+    h1 { margin-top: 0; color: #0866ff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Hello, World!</h1>
+    <p>Edit the code on the left to see changes instantly.</p>
+  </div>
+</body>
+</html>`;
+
+  // Initialize
+  if (htmlInput.value.trim() === '') {
+    htmlInput.value = defaultTemplate;
+  }
+  updatePreview();
+
+  // Auto-run with debounce
+  let timeout: number;
+  htmlInput.addEventListener('input', () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(updatePreview, 300) as any;
+  });
+
+  function updatePreview() {
+    previewFrame.srcdoc = htmlInput.value;
+  }
+
+  // Clear button
+  btnClear.addEventListener('click', () => {
+    htmlInput.value = '';
+    updatePreview();
+    htmlInput.focus();
+  });
+
+  // Format button (basic naive indentation for demonstration)
+  btnFormat.addEventListener('click', () => {
+    // In a real app we'd use prettier, but here we do a basic trim/clean
+    const val = htmlInput.value;
+    // Just force a re-render for now
+    htmlInput.value = val.trim();
+    updatePreview();
+  });
+
+  // Full Screen Toggles
+  btnFullscreen.addEventListener('click', () => {
+    previewPanel.classList.add('fullscreen');
+  });
+
+  btnExitFullscreen.addEventListener('click', () => {
+    previewPanel.classList.remove('fullscreen');
+  });
+
+  // Also exit on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && previewPanel.classList.contains('fullscreen')) {
+      previewPanel.classList.remove('fullscreen');
+    }
+  });
+
+</script>

@@ -1,0 +1,21 @@
+# Task List: tools.asapguide.com Setup & Implementation
+
+- [x] Project Setup
+  - [x] Initialize Astro project in workspace root (`./`)
+  - [x] Configure `astro.config.mjs` for static building
+- [x] Core Styles & Base Layout
+  - [x] Set up global CSS styling using tokens from `design.md` (Analytics Crisp theme)
+  - [x] Create `Layout.astro` with SEO metadata (meta tags, Google Font load for Inter, favicon placeholder)
+- [x] Homepage Development (`index.astro`)
+  - [x] Create simple dashboard layout with tool search and navigation card to MCP Merger
+- [x] MCP JSON Config Merger Tool (`mcp-merger.astro`)
+  - [x] Build user interface (split panels: Existing Config, New Server, Merged Output)
+  - [x] Add copy path helper for macOS/Windows config locations
+  - [x] Implement robust client-side JSON parser, merger, and syntax validator
+  - [x] Add merge conflict resolution (rename/overwrite/skip duplicates)
+  - [x] Implement "Copy" and "Download" actions using Tertiary theme accent color (`#5A4FE0`)
+  - [x] Add SEO-optimized instructional guide article underneath the tool
+- [x] Verification and Polish
+  - [x] Verify HTML semantic elements, performance, and responsive layout
+  - [x] Test JSON validation engine and merge edge cases manually
+  - [x] Create `walkthrough.md` artifact summarizing changes

@@ -1,0 +1,782 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const newPlaceholder = `Paste the new MCP config you want to add. It can be a single server block:
+"sqlite": {
+  "command": "uvx",
+  "args": ["mcp-server-sqlite", "--db-path", "~/test.db"]
+}`;
+---
+
+<Layout 
+  title="MCP Config Merger - Combine Claude & Cursor JSON Settings | AsapGuide" 
+  description="Easily combine Model Context Protocol (MCP) server configurations into your claude_desktop_config.json. Fixes JSON syntax errors and resolves duplicates automatically."
+>
+
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">Developer Tools</p>
+    <h1 class="tool-title">MCP <em class="accent">Config</em> Merger</h1>
+    <p class="tool-desc">Combine MCP server configs into one valid JSON — without breaking anything.</p>
+  </div>
+
+  <!-- ── Main Workspace ── -->
+  <div class="workspace">
+
+  <!-- Editor Grid -->
+    <div class="editor-grid">
+
+      <!-- Panel 1: Existing -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <span class="step-num">1</span>
+            <h2>Existing Config</h2>
+          </div>
+          <div class="panel-bar-right">
+            <button id="btn-upload-existing" class="btn-ghost">Upload</button>
+            <input type="file" id="file-upload-existing" accept=".json" style="display:none" />
+            <button id="btn-load-empty" class="btn-ghost">Template</button>
+          </div>
+        </div>
+        <textarea
+          id="existing-config"
+          placeholder='Paste your existing claude_desktop_config.json here, or click "Template" to start fresh.'
+          spellcheck="false"
+        ></textarea>
+        <div id="existing-validation-msg" class="validation-message"></div>
+      </div>
+
+      <!-- Panel 2: New -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <span class="step-num">2</span>
+            <h2>New MCP to Add</h2>
+          </div>
+          <div class="panel-bar-right">
+            <button id="btn-load-sample" class="btn-ghost">Example</button>
+          </div>
+        </div>
+        <textarea
+          id="new-config"
+          placeholder={newPlaceholder}
+          spellcheck="false"
+        ></textarea>
+        <div id="new-validation-msg" class="validation-message"></div>
+      </div>
+
+    </div><!-- /.editor-grid -->
+
+    <!-- Conflict Panel -->
+    <div id="conflict-resolution-panel" class="card conflict-card" style="display:none">
+      <div class="conflict-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <strong>Merge Conflicts Detected</strong>
+      </div>
+      <p class="conflict-sub">These server names already exist. Choose how to handle each:</p>
+      <div id="conflict-list" class="conflict-list"></div>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="output-panel">
+      <div class="panel-bar">
+        <div class="panel-bar-left">
+          <span class="step-num">3</span>
+          <h2>Merged Output</h2>
+        </div>
+        <div class="panel-bar-right">
+          <button id="btn-download-config" class="btn-ghost">Download JSON</button>
+          <button id="btn-copy-config" class="btn-primary">Copy Config</button>
+        </div>
+      </div>
+      <div class="output-box">
+        <pre><code id="merged-output-code" class="merged-output-placeholder">Merged output will appear here automatically when both inputs are valid.</code></pre>
+      </div>
+      <div id="general-validation-msg" class="validation-message"></div>
+    </div>
+
+  </div><!-- /.workspace -->
+
+  <!-- ── SEO Guide ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>Understanding the Model Context Protocol (MCP)</h2>
+      <p>The <strong>Model Context Protocol (MCP)</strong> is an open standard initiated by Anthropic that lets LLM assistants like Claude Desktop and Cursor securely connect to external data sources, local filesystems, and APIs.</p>
+
+      <h3>Where is the config file?</h3>
+      <p>Claude Desktop reads MCP servers from a JSON file called <code>claude_desktop_config.json</code>. Here's where to find it:</p>
+      <ul>
+        <li><strong>Windows:</strong> <code>%APPDATA%\Claude\claude_desktop_config.json</code> — press <kbd>Win + R</kbd>, paste the path, press Enter.</li>
+        <li><strong>macOS:</strong> <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> — in Finder press <kbd>Cmd + Shift + G</kbd>, paste the path.</li>
+      </ul>
+
+      <h3>How Claude Desktop Configurations Work</h3>
+      <p>The config file tells the client what command to run, what arguments to supply, and what environment variables to inject for each MCP server.</p>
+
+      <h3>Anatomy of a Server Block</h3>
+      <pre><code>{`{
+  "mcpServers": {
+    "my-server-name": {
+      "command": "node",
+      "args": ["/absolute/path/to/server.js"],
+      "env": {
+        "API_KEY": "your-key-here"
+      }
+    }
+  }
+}`}</code></pre>
+
+      <h3>Common Configuration Pitfalls</h3>
+      <ul>
+        <li><strong>Trailing Commas:</strong> Standard JSON forbids trailing commas (e.g. <code>"args": ["a", "b",]</code>). This tool auto-strips them.</li>
+        <li><strong>Unquoted Keys:</strong> JSON keys must always be in double quotes.</li>
+        <li><strong>Invalid Nesting:</strong> Server commands must live under the <code>"mcpServers"</code> key. The merger fixes this automatically.</li>
+        <li><strong>Duplicate Server Names:</strong> The merger flags conflicts so you can overwrite, rename, or skip them.</li>
+      </ul>
+    </article>
+  </div>
+
+</Layout>
+
+<script>
+  const existingTextarea = document.getElementById('existing-config') as HTMLTextAreaElement;
+  const newTextarea = document.getElementById('new-config') as HTMLTextAreaElement;
+  const existingValidationMsg = document.getElementById('existing-validation-msg') as HTMLDivElement;
+  const newValidationMsg = document.getElementById('new-validation-msg') as HTMLDivElement;
+  const generalValidationMsg = document.getElementById('general-validation-msg') as HTMLDivElement;
+
+  const fileUploadExisting = document.getElementById('file-upload-existing') as HTMLInputElement;
+  const btnUploadExisting = document.getElementById('btn-upload-existing') as HTMLButtonElement;
+  const btnLoadEmpty = document.getElementById('btn-load-empty') as HTMLButtonElement;
+  const btnLoadSample = document.getElementById('btn-load-sample') as HTMLButtonElement;
+
+  btnUploadExisting.addEventListener('click', () => fileUploadExisting.click());
+
+  const conflictResolutionPanel = document.getElementById('conflict-resolution-panel') as HTMLDivElement;
+  const conflictList = document.getElementById('conflict-list') as HTMLDivElement;
+
+  const mergedOutputCode = document.getElementById('merged-output-code') as HTMLElement;
+  const btnCopyConfig = document.getElementById('btn-copy-config') as HTMLButtonElement;
+  const btnDownloadConfig = document.getElementById('btn-download-config') as HTMLButtonElement;
+
+  // Copy path buttons
+  document.querySelectorAll('.btn-copy-path').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-target');
+      if (id) {
+        const el = document.getElementById(id);
+        if (el) {
+          navigator.clipboard.writeText(el.textContent || '');
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+        }
+      }
+    });
+  });
+
+  // Presets
+  const EMPTY_TEMPLATE = JSON.stringify({
+    "mcpServers": {
+      "filesystem": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\yourname\\Desktop"]
+      }
+    }
+  }, null, 2);
+
+  const SAMPLE_NEW_SERVER = `"brave-search": {
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+  "env": {
+    "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
+  }
+}`;
+
+  btnLoadEmpty.addEventListener('click', () => { existingTextarea.value = EMPTY_TEMPLATE; triggerMerge(); });
+  btnLoadSample.addEventListener('click', () => { newTextarea.value = SAMPLE_NEW_SERVER; triggerMerge(); });
+
+  fileUploadExisting.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (evt.target?.result) { existingTextarea.value = evt.target.result as string; triggerMerge(); }
+    };
+    reader.readAsText(file);
+  });
+
+  // State
+  let parsedExisting: any = null;
+  let parsedNewServers: any = {};
+  let resolvedConflicts: Record<string, 'overwrite' | 'rename' | 'skip'> = {};
+  let mergedResult: any = null;
+
+  function sanitizeJSONString(str: string): string {
+    let clean = str.trim();
+    if (!clean) return '';
+    clean = clean.replace(/,(\s*[\]}])/g, '$1');
+    return clean;
+  }
+
+  function parseNewInput(rawInput: string): { data: any; error: string | null } {
+    const sanitized = sanitizeJSONString(rawInput);
+    if (!sanitized) return { data: {}, error: null };
+    try {
+      const parsed = JSON.parse(sanitized);
+      return { data: extractServersFromObject(parsed), error: null };
+    } catch (e: any) {
+      try {
+        const wrapped = JSON.parse(`{ ${sanitized} }`);
+        return { data: extractServersFromObject(wrapped), error: null };
+      } catch {
+        return { data: null, error: e.message };
+      }
+    }
+  }
+
+  function extractServersFromObject(obj: any): any {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+    if (obj.mcpServers && typeof obj.mcpServers === 'object' && !Array.isArray(obj.mcpServers)) return obj.mcpServers;
+    if ('command' in obj) return { "imported-server": obj };
+    return obj;
+  }
+
+  function parseExistingInput(rawInput: string): { data: any; error: string | null } {
+    const sanitized = sanitizeJSONString(rawInput);
+    if (!sanitized) return { data: { mcpServers: {} }, error: null };
+    try {
+      const parsed = JSON.parse(sanitized);
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) return { data: null, error: "Configuration must be a JSON object." };
+      return { data: parsed, error: null };
+    } catch (e: any) {
+      return { data: null, error: e.message };
+    }
+  }
+
+  function triggerMerge() {
+    existingValidationMsg.textContent = '';
+    existingValidationMsg.className = 'validation-message';
+    newValidationMsg.textContent = '';
+    newValidationMsg.className = 'validation-message';
+    generalValidationMsg.textContent = '';
+    generalValidationMsg.className = 'validation-message';
+
+    const existingVal = existingTextarea.value.trim();
+    const newVal = newTextarea.value.trim();
+
+    if (!existingVal && !newVal) {
+      mergedOutputCode.textContent = "Merged output will appear here automatically when both inputs are valid.";
+      mergedOutputCode.className = "merged-output-placeholder";
+      conflictResolutionPanel.style.display = 'none';
+      return;
+    }
+
+    const existingParse = parseExistingInput(existingVal);
+    if (existingParse.error) {
+      existingValidationMsg.textContent = `Syntax Error: ${existingParse.error}`;
+      existingValidationMsg.classList.add('error');
+      invalidateOutput(); return;
+    } else if (existingVal) {
+      existingValidationMsg.textContent = '✓ Valid JSON';
+      existingValidationMsg.classList.add('success');
+    }
+    parsedExisting = existingParse.data;
+    if (!parsedExisting.mcpServers) parsedExisting.mcpServers = {};
+
+    const newParse = parseNewInput(newVal);
+    if (newParse.error) {
+      newValidationMsg.textContent = `Syntax Error: ${newParse.error}`;
+      newValidationMsg.classList.add('error');
+      invalidateOutput(); return;
+    } else if (newVal) {
+      newValidationMsg.textContent = '✓ Valid MCP server definition';
+      newValidationMsg.classList.add('success');
+    }
+    parsedNewServers = newParse.data;
+
+    const conflicts = Object.keys(parsedNewServers).filter(
+      key => parsedExisting.mcpServers && key in parsedExisting.mcpServers
+    );
+
+    if (conflicts.length > 0) {
+      renderConflicts(conflicts);
+      conflictResolutionPanel.style.display = 'block';
+    } else {
+      conflictResolutionPanel.style.display = 'none';
+    }
+
+    performMerge();
+  }
+
+  function renderConflicts(conflicts: string[]) {
+    conflictList.innerHTML = '';
+    conflicts.forEach(key => {
+      const currentChoice = resolvedConflicts[key] || 'overwrite';
+      const item = document.createElement('div');
+      item.className = 'conflict-item';
+      item.innerHTML = `
+        <span class="conflict-key"><code>${key}</code></span>
+        <div class="conflict-options">
+          <label><input type="radio" name="conflict-${key}" value="overwrite" ${currentChoice === 'overwrite' ? 'checked' : ''} /> Overwrite</label>
+          <label><input type="radio" name="conflict-${key}" value="rename" ${currentChoice === 'rename' ? 'checked' : ''} /> Rename to "${key}-new"</label>
+          <label><input type="radio" name="conflict-${key}" value="skip" ${currentChoice === 'skip' ? 'checked' : ''} /> Skip</label>
+        </div>
+      `;
+      const radios = item.querySelectorAll(`input[name="conflict-${key}"]`);
+      radios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          resolvedConflicts[key] = (e.target as HTMLInputElement).value as any;
+          performMerge();
+        });
+      });
+      conflictList.appendChild(item);
+    });
+  }
+
+  function performMerge() {
+    if (!parsedExisting) return;
+    const finalConfig = JSON.parse(JSON.stringify(parsedExisting));
+    if (!finalConfig.mcpServers) finalConfig.mcpServers = {};
+    Object.entries(parsedNewServers).forEach(([key, value]) => {
+      if (key in finalConfig.mcpServers) {
+        const choice = resolvedConflicts[key] || 'overwrite';
+        if (choice === 'overwrite') finalConfig.mcpServers[key] = value;
+        else if (choice === 'rename') finalConfig.mcpServers[`${key}-new`] = value;
+      } else {
+        finalConfig.mcpServers[key] = value;
+      }
+    });
+    mergedResult = finalConfig;
+    mergedOutputCode.textContent = JSON.stringify(finalConfig, null, 2);
+    mergedOutputCode.className = 'merged-output-code';
+  }
+
+  function invalidateOutput() {
+    mergedOutputCode.textContent = "Fix the errors above to generate the merged output.";
+    mergedOutputCode.className = "merged-output-error";
+    conflictResolutionPanel.style.display = 'none';
+  }
+
+  existingTextarea.addEventListener('input', triggerMerge);
+  newTextarea.addEventListener('input', triggerMerge);
+
+  btnCopyConfig.addEventListener('click', () => {
+    if (!mergedResult) {
+      generalValidationMsg.textContent = 'Enter valid inputs first to generate the output.';
+      generalValidationMsg.className = 'validation-message error';
+      return;
+    }
+    navigator.clipboard.writeText(mergedOutputCode.textContent || '');
+    const orig = btnCopyConfig.textContent;
+    btnCopyConfig.textContent = 'Copied!';
+    setTimeout(() => { btnCopyConfig.textContent = orig; }, 2000);
+  });
+
+  btnDownloadConfig.addEventListener('click', () => {
+    if (!mergedResult) {
+      generalValidationMsg.textContent = 'Enter valid inputs first to generate the output.';
+      generalValidationMsg.className = 'validation-message error';
+      return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mergedResult, null, 2));
+    const a = document.createElement('a');
+    a.setAttribute('href', dataStr);
+    a.setAttribute('download', 'claude_desktop_config.json');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+</script>
+
+<style>
+  /* ── Hero ── */
+  .tool-hero {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 64px 24px 56px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 14px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  /* ── Workspace ── */
+  .workspace {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Path Card ── */
+  .path-card {
+    padding: 20px 24px;
+  }
+
+  .path-card-inner {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .path-left {
+    flex-shrink: 0;
+  }
+
+  .path-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 10px;
+  }
+
+  .os-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--color-neutral);
+    border-radius: var(--rounded-sm);
+    padding: 3px;
+  }
+
+  .os-tab {
+    background: none;
+    border: none;
+    font-family: var(--font-family);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+    padding: 5px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .os-tab.active { background: var(--color-surface); color: var(--color-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  .path-right { flex: 1; min-width: 0; }
+
+  .path-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--color-neutral);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-md);
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+
+  .path-row code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--color-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .btn-copy-path {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-primary);
+    font-family: var(--font-family);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-copy-path:hover { border-color: var(--color-primary); }
+  .btn-copy-path.copied { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+
+  .path-tip {
+    font-size: 0.8rem;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  kbd {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.75rem;
+    font-family: var(--font-family);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+  }
+
+  /* ── Editor Grid ── */
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .editor-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Editor Panel ── */
+  .editor-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── Panel Bar ── */
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+  }
+
+  .panel-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .panel-bar-left h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .panel-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+  .panel-bar-right .btn-primary {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  /* Textareas */
+  textarea {
+    width: 100%;
+    height: 280px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    resize: vertical;
+    padding: 14px 16px;
+    background: var(--color-surface);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  textarea:focus {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8,102,255,0.1);
+  }
+
+  /* Validation messages */
+  .validation-message {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: var(--rounded-md);
+    display: none;
+  }
+  .validation-message.error {
+    display: block;
+    background: rgba(228, 23, 73, 0.06);
+    color: var(--color-error);
+    border: 1px solid rgba(228, 23, 73, 0.15);
+  }
+  .validation-message.success {
+    display: block;
+    background: rgba(29, 164, 98, 0.07);
+    color: var(--color-success);
+    border: 1px solid rgba(29, 164, 98, 0.15);
+  }
+
+  /* ── Conflict Card ── */
+  .conflict-card {
+    background: rgba(245, 166, 35, 0.04);
+    border: 1px solid rgba(245, 166, 35, 0.25);
+    padding: 20px 24px;
+  }
+
+  .conflict-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-warning);
+    margin-bottom: 4px;
+  }
+  .conflict-header svg { flex-shrink: 0; }
+  .conflict-header strong { font-size: 0.95rem; }
+
+  .conflict-sub {
+    font-size: 0.85rem;
+    color: var(--color-secondary);
+    margin-bottom: 12px;
+  }
+
+  .conflict-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .conflict-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-md);
+    padding: 10px 16px;
+    flex-wrap: wrap;
+  }
+
+  .conflict-key code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--color-primary);
+  }
+
+  .conflict-options {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .conflict-options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  /* ── Output Panel ── */
+  .output-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .output-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    padding: 16px;
+    height: 300px;
+    overflow-y: auto;
+  }
+
+  .output-box pre { margin: 0; }
+
+  #merged-output-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: block;
+  }
+
+  .merged-output-placeholder { color: var(--color-secondary); font-style: italic; }
+  .merged-output-error { color: var(--color-error); }
+
+  /* ── Extreme Mobile Fixes ── */
+  @media (max-width: 480px) {
+    .panel-bar { flex-wrap: wrap; height: auto; gap: 8px; }
+    .panel-bar-right { width: 100%; justify-content: flex-start; }
+    .workspace { padding: 24px 16px 40px; }
+    .tool-hero { padding: 40px 16px 32px; }
+  }
+</style>

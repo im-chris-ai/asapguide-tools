@@ -1,0 +1,27 @@
+# Cursor Rules - AsapGuide Tools
+
+Always follow these guidelines when editing or adding tools to prevent UI regressions, branding leaks, and build failures.
+
+## 1. Branding & Navigation Constraints
+- NEVER include links pointing to "Main Site" or the external domain `asapguide.com` in headers, footers, or layout templates.
+- The tools interface must remain self-contained, focusing exclusively on the local tools utility index.
+
+## 2. UI Aesthetics & Layout Rules (Avoid Clunky & Overcrowded UI)
+- **Symmetrical Design**: Side-by-side layout grids (like comparison panels or editors) must have symmetric sub-toolbars (`.editor-toolbar`) nested inside `.input-container` rather than cluttering panel bars.
+- **Panel Action Limits**: Do NOT place more than two buttons in `.panel-bar-right`. Extra controls, dropdowns, and formatting parameters must go inside the nested `.editor-toolbar`.
+- **Button Sizing**: Maintain uniform compact sizing. Ghost buttons (`.btn-ghost`) and primary buttons (`.btn-primary`) in panel bars must share the same height/padding (`padding: 6px 12px; font-size: 0.8rem;`).
+- **Segmented Controls**: Mutually exclusive options (e.g. modes, operating systems) must use segmented controls (`.segmented-control`), not separate raw buttons.
+- **Focus Rings**: Always wrap input fields and their footer controls/bars inside a `.input-container` with `:focus-within` styling to ensure a single clean focus ring around the whole group.
+
+## 3. Defensive Layouts & Text Wrapping
+- Ensure flex items that hold dynamic titles/actions use `flex-wrap: nowrap` paired with proper min-widths and truncation rules so they never wrap awkwardly or overlap on smaller screens.
+- Use `overflow: hidden` and `text-overflow: ellipsis` when forcing `white-space: nowrap` on text strings.
+
+## 4. Astro/JSX Template Safety (Compiler Safety)
+- Because Astro parses HTML like JSX, any raw curly braces `{` or `}` directly in text or mock code blocks (e.g., inside `<code>` or instructions) will break the production build.
+- **Prevention**: Always escape raw curly braces inside HTML markup by wrapping them in string expressions: `{"{key: val}"}` or `<code>{`{"key": "val"}`}</code>`.
+
+## 5. Verification Checklist
+Before finishing any change:
+1. Always run a static build check (`npm run build`) to ensure Astro compiles without JSX/curly-brace syntax errors.
+2. Check layout responsiveness: shrink the viewport to mobile sizes to verify that header bars, controls, and grids stack or scale cleanly without overflows or broken buttons.
