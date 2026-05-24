@@ -310,11 +310,13 @@ import Layout from '../layouts/Layout.astro';
   }
 </style>
 
-<script data-astro-rerun>
+<script>
   // Dynamic import of gpt-tokenizer (so it doesn't block page load initially)
   import { encode } from 'gpt-tokenizer';
 
-  const textInput = document.getElementById('text-input') as HTMLTextAreaElement;
+  document.addEventListener('astro:page-load', () => {
+    const textInput = document.getElementById('text-input') as HTMLTextAreaElement;
+    if (!textInput) return;
   const btnClear = document.getElementById('btn-clear') as HTMLButtonElement;
   
   const elChars = document.getElementById('val-chars') as HTMLElement;
@@ -378,5 +380,5 @@ import Layout from '../layouts/Layout.astro';
     updateCounts();
     textInput.focus();
   });
-
+});
 </script>

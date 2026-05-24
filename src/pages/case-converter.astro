@@ -129,8 +129,10 @@ import Layout from '../layouts/Layout.astro';
 
 </Layout>
 
-<script data-astro-rerun>
-  const textInput = document.getElementById('text-input') as HTMLTextAreaElement;
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const textInput = document.getElementById('text-input') as HTMLTextAreaElement;
+    if (!textInput) return;
   const textOutput = document.getElementById('text-output') as HTMLTextAreaElement;
   
   const btnSample = document.getElementById('btn-sample') as HTMLButtonElement;
@@ -416,6 +418,7 @@ import Layout from '../layouts/Layout.astro';
 
   // Initial run
   convertText();
+  });
 </script>
 
 <style>

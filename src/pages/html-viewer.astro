@@ -331,8 +331,10 @@ import Layout from '../layouts/Layout.astro';
   }
 </style>
 
-<script data-astro-rerun>
-  const htmlInput = document.getElementById('html-input') as HTMLTextAreaElement;
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const htmlInput = document.getElementById('html-input') as HTMLTextAreaElement;
+    if (!htmlInput) return;
   const previewFrame = document.getElementById('preview-frame') as HTMLIFrameElement;
   const btnFormat = document.getElementById('btn-format') as HTMLButtonElement;
   const btnClear = document.getElementById('btn-clear') as HTMLButtonElement;
@@ -429,5 +431,5 @@ import Layout from '../layouts/Layout.astro';
     }
   };
   document.addEventListener('keydown', (window as any)._htmlViewerEscapeHandler);
-
+  });
 </script>

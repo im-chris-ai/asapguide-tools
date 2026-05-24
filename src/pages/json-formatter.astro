@@ -129,8 +129,10 @@ import Layout from '../layouts/Layout.astro';
 
 </Layout>
 
-<script data-astro-rerun>
-  const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
+    if (!jsonInput) return;
   const jsonOutput = document.getElementById('json-output') as HTMLTextAreaElement;
   
   const btnSample = document.getElementById('btn-sample') as HTMLButtonElement;
@@ -308,6 +310,7 @@ import Layout from '../layouts/Layout.astro';
 
   // Initial run
   processJSON();
+  });
 </script>
 
 <style>

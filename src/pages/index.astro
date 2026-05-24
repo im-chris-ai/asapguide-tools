@@ -136,37 +136,41 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </section>
 
-  <script data-astro-rerun>
-    const searchInput = document.getElementById('tool-search') as HTMLInputElement;
-    const tabs = document.querySelectorAll('.tab');
-    const cards = document.querySelectorAll('.tool-card');
-    const noResults = document.getElementById('no-results');
-    let activeFilter = 'all';
-    let searchQuery = '';
+  <script>
+    document.addEventListener('astro:page-load', () => {
+      const searchInput = document.getElementById('tool-search') as HTMLInputElement;
+      if (!searchInput) return;
 
-    function filter() {
-      let count = 0;
-      cards.forEach((card) => {
-        const title = card.getAttribute('data-title') || '';
-        const tags = (card.getAttribute('data-tags') || '').split(',');
-        const show = title.includes(searchQuery) && (activeFilter === 'all' || tags.includes(activeFilter));
-        (card as HTMLElement).style.display = show ? '' : 'none';
-        if (show) count++;
-      });
-      if (noResults) noResults.style.display = count === 0 ? 'block' : 'none';
-    }
+      const tabs = document.querySelectorAll('.tab');
+      const cards = document.querySelectorAll('.tool-card');
+      const noResults = document.getElementById('no-results');
+      let activeFilter = 'all';
+      let searchQuery = '';
 
-    searchInput?.addEventListener('input', (e) => {
-      searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
-      filter();
-    });
+      function filter() {
+        let count = 0;
+        cards.forEach((card) => {
+          const title = card.getAttribute('data-title') || '';
+          const tags = (card.getAttribute('data-tags') || '').split(',');
+          const show = title.includes(searchQuery) && (activeFilter === 'all' || tags.includes(activeFilter));
+          (card as HTMLElement).style.display = show ? '' : 'none';
+          if (show) count++;
+        });
+        if (noResults) noResults.style.display = count === 0 ? 'block' : 'none';
+      }
 
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        activeFilter = tab.getAttribute('data-filter') || 'all';
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
         filter();
+      });
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          activeFilter = tab.getAttribute('data-filter') || 'all';
+          filter();
+        });
       });
     });
   </script>
