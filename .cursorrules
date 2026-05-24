@@ -17,11 +17,12 @@ Always follow these guidelines when editing or adding tools to prevent UI regres
 - Ensure flex items that hold dynamic titles/actions use `flex-wrap: nowrap` paired with proper min-widths and truncation rules so they never wrap awkwardly or overlap on smaller screens.
 - Use `overflow: hidden` and `text-overflow: ellipsis` when forcing `white-space: nowrap` on text strings.
 
-## 4. Astro/JSX Template Safety (Compiler Safety)
-- Because Astro parses HTML like JSX, any raw curly braces `{` or `}` directly in text or mock code blocks (e.g., inside `<code>` or instructions) will break the production build.
-- **Prevention**: Always escape raw curly braces inside HTML markup by wrapping them in string expressions: `{"{key: val}"}` or `<code>{`{"key": "val"}`}</code>`.
+## 5. View Transitions & Script Lifecycles (Instant Page Loads)
+- The site uses `<ClientRouter />` for SPA-like transitions and page prefetching.
+- **Script Tag Rules**: All client-side scripts inside Astro pages (`.astro`) must include the `data-astro-rerun` attribute (e.g., `<script data-astro-rerun>`). This forces the script to re-initialize and bind event listeners to the new DOM elements every time the page is navigated to.
+- **Global Event Listeners**: If a script attaches event listeners to global objects (`window` or `document`), always clean up previous listeners before adding new ones (e.g. by storing the listener function on the `window` object and running `removeEventListener` first) to prevent memory leaks and stacked handlers on transition re-runs.
 
-## 5. Verification Checklist
+## 6. Verification Checklist
 Before finishing any change:
 1. Always run a static build check (`npm run build`) to ensure Astro compiles without JSX/curly-brace syntax errors.
 2. Check layout responsiveness: shrink the viewport to mobile sizes to verify that header bars, controls, and grids stack or scale cleanly without overflows or broken buttons.

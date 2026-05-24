@@ -250,3 +250,22 @@ Always escape raw curly braces inside HTML markup by wrapping them in Astro temp
 
 Do not introduce external links pointing back to main sites or landing directories in the tool headers/footers unless explicitly requested. Keep the layout focused exclusively on the utility index.
 
+## 13. Script Lifecycles & View Transitions (Instant Routing)
+
+Because the site uses Astro's `<ClientRouter />` to transition between pages without refreshing the browser:
+- **Rule**: All `<script>` tags that control interactive tools MUST include the `data-astro-rerun` attribute:
+  ```astro
+  <script data-astro-rerun>
+    // Tool interactive logic here
+  </script>
+  ```
+- **Global Event Listeners**: If your script binds event listeners to global scopes like `document` or `window`, you must check for and clean up old handlers so they do not stack up on page transition:
+  ```javascript
+  if (window._myHandler) {
+    document.removeEventListener('keydown', window._myHandler);
+  }
+  window._myHandler = (e) => { ... };
+  document.addEventListener('keydown', window._myHandler);
+  ```
+
+

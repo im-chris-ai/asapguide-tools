@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title: string;
@@ -48,6 +49,7 @@ const {
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,700;1,9..144,800;1,9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <meta name="generator" content={Astro.generator} />
+  <ClientRouter />
 </head>
 <body>
   <header class="site-header">

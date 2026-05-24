@@ -6,6 +6,7 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://tools.asapguide.com',
   output: 'static',
+  prefetch: true,
   integrations: [sitemap()],
 });
 

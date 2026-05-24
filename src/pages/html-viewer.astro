@@ -331,7 +331,7 @@ import Layout from '../layouts/Layout.astro';
   }
 </style>
 
-<script>
+<script data-astro-rerun>
   const htmlInput = document.getElementById('html-input') as HTMLTextAreaElement;
   const previewFrame = document.getElementById('preview-frame') as HTMLIFrameElement;
   const btnFormat = document.getElementById('btn-format') as HTMLButtonElement;
@@ -418,11 +418,16 @@ import Layout from '../layouts/Layout.astro';
     previewPanel.classList.remove('fullscreen');
   });
 
-  // Also exit on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && previewPanel.classList.contains('fullscreen')) {
-      previewPanel.classList.remove('fullscreen');
+  // Also exit on Escape key (safely handles View Transition reruns without duplicating global listeners)
+  if ((window as any)._htmlViewerEscapeHandler) {
+    document.removeEventListener('keydown', (window as any)._htmlViewerEscapeHandler);
+  }
+  (window as any)._htmlViewerEscapeHandler = (e: KeyboardEvent) => {
+    const panel = document.getElementById('preview-container');
+    if (e.key === 'Escape' && panel && panel.classList.contains('fullscreen')) {
+      panel.classList.remove('fullscreen');
     }
-  });
+  };
+  document.addEventListener('keydown', (window as any)._htmlViewerEscapeHandler);
 
 </script>
