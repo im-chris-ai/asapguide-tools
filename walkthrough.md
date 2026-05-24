@@ -74,3 +74,19 @@ Manual verification of the client-side merge engine was conducted with the follo
 
 - **Case D: Clipboard and Download Utilities**
   - Tested "Copy Path" helper, "Copy Merged Config", and "Download JSON" buttons; all functioned correctly on desktop and mobile.
+
+---
+
+## Hosting & Deployment
+
+The website has been successfully deployed to production via **Cloudflare Pages** and integrated with **GitHub** for continuous integration and deployment (CI/CD).
+
+- **GitHub Repository**: [im-chris-ai/asapguide-tools](https://github.com/im-chris-ai/asapguide-tools)
+- **Deployment Platform**: Cloudflare Pages (Primary Account)
+- **Custom Domain**: [tools.asapguide.com](https://tools.asapguide.com)
+- **Build Configuration**:
+  - **Framework Preset**: Astro
+  - **Build Command**: `npm run build`
+  - **Build Output Directory**: `/dist`
+  - **Environment Variables**: `NODE_VERSION=22` (to satisfy Node.js engine compatibility)
+
