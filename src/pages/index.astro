@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { TOOLS } from '../data/tools';
 ---
 
 <Layout 
@@ -32,102 +33,77 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <div class="grid" id="tools-grid">
-
-        <!-- MCP Config Merger — Live -->
-        <a href="/mcp-merger" class="card tool-card live" data-tags="ai-tools,developer-tools" data-title="mcp json config merger">
-          <div class="card-head">
-            <div class="icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 6H5a2 2 0 0 0-2 2v3"/><path d="M21 11V8a2 2 0 0 0-2-2h-3"/>
-                <path d="M16 18h3a2 2 0 0 0 2-2v-3"/><path d="M3 13v3a2 2 0 0 0 2 2h3"/>
-                <path d="M9 12h6"/><path d="M12 9v6"/>
-              </svg>
-            </div>
-            <span class="badge live-badge">Live</span>
-          </div>
-          <h2>MCP Config Merger</h2>
-          <p>Combine MCP server configs into one valid JSON — no manual editing required.</p>
-          <span class="cta">Open tool →</span>
-        </a>
-
-        <!-- LLM Token Counter — Live -->
-        <a href="/token-counter" class="card tool-card live" data-tags="ai-tools" data-title="llm token counter gpt-4o claude gemini">
-          <div class="card-head">
-            <div class="icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/>
-                <path d="m4.93 19.07 2.83-2.83"/><path d="M12 18v4"/>
-                <path d="m19.07 19.07-2.83-2.83"/><path d="M18 12h4"/><path d="m19.07 4.93-2.83 2.83"/>
-              </svg>
-            </div>
-            <span class="badge live-badge">Live</span>
-          </div>
-          <h2>LLM Token Counter</h2>
-          <p>Estimate token usage for GPT-4o, Claude, and Gemini instantly.</p>
-          <span class="cta">Open tool →</span>
-        </a>
-
-        <!-- LLM API Cost Calculator — Soon -->
-        <a href="#" class="card tool-card disabled" data-tags="ai-tools" data-title="llm api cost calculator openai anthropic gemini deepseek">
-          <div class="card-head">
-            <div class="icon dim">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-            </div>
-            <span class="badge soon-badge">Soon</span>
-          </div>
-          <h2>LLM API Cost Calculator</h2>
-          <p>Compare pricing across OpenAI, Anthropic, Gemini, and DeepSeek.</p>
-        </a>
-
-
-
-        <!-- JSON Formatter — Live -->
-        <a href="/json-formatter" class="card tool-card live" data-tags="developer-tools" data-title="json formatter beautifier minifier">
-          <div class="card-head">
-            <div class="icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-              </svg>
-            </div>
-            <span class="badge live-badge">Live</span>
-          </div>
-          <h2>JSON Formatter</h2>
-          <p>Beautify, minify, and validate JSON instantly.</p>
-          <span class="cta">Open tool →</span>
-        </a>
-
-        <!-- HTML Viewer — Live -->
-        <a href="/html-viewer" class="card tool-card live" data-tags="developer-tools" data-title="html viewer preview sandbox live">
-          <div class="card-head">
-            <div class="icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 12l-2 2 2 2"/><path d="M14 12l2 2-2 2"/>
-              </svg>
-            </div>
-            <span class="badge live-badge">Live</span>
-          </div>
-          <h2>HTML Viewer</h2>
-          <p>Instantly preview your HTML, CSS, and JS in a live sandbox.</p>
-          <span class="cta">Open tool →</span>
-        </a>
-
-        <!-- Case Converter — Live -->
-        <a href="/case-converter" class="card tool-card live" data-tags="utilities" data-title="text case converter upper lower title">
-          <div class="card-head">
-            <div class="icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
-              </svg>
-            </div>
-            <span class="badge live-badge">Live</span>
-          </div>
-          <h2>Case Converter</h2>
-          <p>Convert text to camelCase, snake_case, Title Case, and more.</p>
-          <span class="cta">Open tool →</span>
-        </a>
-
+        {TOOLS.map((tool) => {
+          const isLive = tool.status === 'live';
+          const CardComponent = isLive ? 'a' : 'div';
+          return (
+            <CardComponent 
+              href={isLive ? tool.path : undefined} 
+              class={`card tool-card ${tool.status}`} 
+              data-tags={tool.tags.join(',')} 
+              data-title={tool.titleSearch}
+            >
+              <div class="card-head">
+                <div class={`icon ${!isLive ? 'dim' : ''}`}>
+                  {tool.id === 'mcp-merger' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M8 6H5a2 2 0 0 0-2 2v3"/><path d="M21 11V8a2 2 0 0 0-2-2h-3"/>
+                      <path d="M16 18h3a2 2 0 0 0 2-2v-3"/><path d="M3 13v3a2 2 0 0 0 2 2h3"/>
+                      <path d="M9 12h6"/><path d="M12 9v6"/>
+                    </svg>
+                  )}
+                  {tool.id === 'vram-calculator' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                      <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                      <line x1="6" y1="6" x2="6.01" y2="6"/>
+                      <line x1="6" y1="18" x2="6.01" y2="18"/>
+                      <line x1="18" y1="6" x2="18.01" y2="6"/>
+                      <line x1="18" y1="18" x2="18.01" y2="18"/>
+                    </svg>
+                  )}
+                  {tool.id === 'token-counter' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/>
+                      <path d="m4.93 19.07 2.83-2.83"/><path d="M12 18v4"/>
+                      <path d="m19.07 19.07-2.83-2.83"/><path d="M18 12h4"/><path d="m19.07 4.93-2.83 2.83"/>
+                    </svg>
+                  )}
+                  {tool.id === 'json-formatter' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                    </svg>
+                  )}
+                  {tool.id === 'html-viewer' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 12l-2 2 2 2"/><path d="M14 12l2 2-2 2"/>
+                    </svg>
+                  )}
+                  {tool.id === 'case-converter' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
+                    </svg>
+                  )}
+                  {tool.id === 'api-cost-calculator' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  )}
+                  {tool.id === 'lm-studio-tester' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      <path d="m8 7 3 3-3 3"/>
+                      <line x1="12" y1="13" x2="16" y2="13"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <h2>{tool.title}</h2>
+              <p>{tool.description}</p>
+              {isLive && <span class="cta">Open tool →</span>}
+            </CardComponent>
+          );
+        })}
       </div><!-- /.grid -->
 
       <div class="no-results" id="no-results" style="display:none">
@@ -316,7 +292,10 @@ import Layout from '../layouts/Layout.astro';
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
   }
+
+
 
   .icon {
     width: 42px;
@@ -335,26 +314,7 @@ import Layout from '../layouts/Layout.astro';
     color: var(--color-secondary);
   }
 
-  .badge {
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 3px 9px;
-    border-radius: 99px;
-  }
 
-  .live-badge {
-    background: rgba(8, 102, 255, 0.08);
-    color: var(--color-tertiary);
-    border: 1px solid rgba(8, 102, 255, 0.18);
-  }
-
-  .soon-badge {
-    background: rgba(96, 103, 112, 0.08);
-    color: var(--color-secondary);
-    border: 1px solid var(--color-border);
-  }
 
   .tool-card h2 {
     font-size: 1rem;

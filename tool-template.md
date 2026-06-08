@@ -268,4 +268,17 @@ Because the site uses Astro's `<ClientRouter />` to transition between pages wit
   document.addEventListener('keydown', window._myHandler);
   ```
 
+## 14. Tool Lifecycle & Maintenance Registration
+
+Whenever you build a new tool, you MUST configure its maintenance lifecycle so future developers (and AIs) can manage it effectively:
+
+1. **Lifecycle Classification**:
+   * Classify the tool as `static` (completely self-contained, e.g., Case Converter) or `model-dependent` (requires data updates for models, APIs, or hardware specs, e.g., VRAM Calculator).
+2. **Central Registry Entry**:
+   * Add a new metadata object to the `TOOLS` array in [tools.ts](file:///c:/Coding%20Project%20AsapGuide%20Tools/src/data/tools.ts). Specify the correct `lifecycle` and `status` values.
+3. **Data Preset Decoupling (for `model-dependent` tools)**:
+   * Do NOT hardcode preset arrays (like GPUs, AI model dimensions, or token metrics) inside the `.astro` page.
+   * Instead, create a unified config file at `src/data/[tool-id].ts`.
+   * Add a structured **MAINTENANCE PLAN** comment block at the top of that file outlining the exact research steps, sources, and arrays to update during periodic maintenance sweeps.
+
 

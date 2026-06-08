@@ -1,0 +1,1907 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="LM Studio Server Tester — Connect, Load Models & Chat Locally" 
+  description="A client-side developer utility to test connection to your local LM Studio server, load/unload models, configure inference parameters, and chat with streaming tokens."
+>
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">AI Tools</p>
+    <h1 class="tool-title">LM Studio <em class="accent">Server</em> Tester</h1>
+    <p class="tool-desc">Test your local LM Studio instance, manage model lifecycles, and run streaming chat diagnostics.</p>
+  </div>
+
+  <!-- ── Main Workspace ── -->
+  <div class="workspace">
+    <div class="tester-grid">
+      
+      <!-- ── Chat Interface (Left - Primary View) ── -->
+      <div class="tester-chat-panel">
+        
+        <!-- Active Model Bar (Chat Header with Server Settings + Model Selector) -->
+        <div class="active-model-bar">
+          <!-- Left: Server Connection Settings -->
+          <div class="header-server-settings">
+            <span class="active-label">Server:</span>
+            <input type="text" id="server-url" value="http://localhost:1234" placeholder="e.g. http://localhost:1234" class="header-url-input" />
+            <button id="btn-connect" class="btn-primary btn-mini-connect">Connect</button>
+          </div>
+
+          <!-- Right: Model Selection -->
+          <div class="header-model-settings">
+            <span class="active-label">Model:</span>
+            <div class="model-select-wrapper">
+              <div class="custom-select-container" id="chat-model-container">
+                <input type="text" id="chat-model-search" class="custom-select-search-input" placeholder="Connect first..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" disabled />
+                <div class="custom-select-arrow" id="chat-model-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="chat-model-dropdown" style="display: none;">
+                  <div class="custom-select-options" id="chat-model-options" role="listbox">
+                    <!-- Loaded dynamically -->
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="chat-model-select" value="" />
+            </div>
+            <button id="btn-unload-model" class="btn-secondary btn-mini-unload" style="display: none;">Unload</button>
+          </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-window">
+          
+          <!-- Message Logs -->
+          <div id="chat-messages" class="chat-messages-container">
+            
+            <!-- Welcome State (No Connection / Instruction) -->
+            <div class="chat-welcome-state" id="chat-welcome">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                <path d="m8 7 3 3-3 3"/>
+                <line x1="12" y1="13" x2="16" y2="13"/>
+              </svg>
+              <h2>LM Studio Chat Sandbox</h2>
+              <p>Connect to the server in the header to list downloaded models, then select a model and send a message. If the model isn't loaded, it will load automatically.</p>
+            </div>
+
+            <!-- CORS Alert Box (Hidden by default, displayed inside viewport on fail) -->
+            <div id="cors-alert" class="alert-box error-alert" style="display: none; width: 100%; max-width: 420px; margin: auto;">
+              <div class="alert-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <strong>Connection Blocked (CORS)</strong>
+              </div>
+              <p class="alert-desc">Browser blocked connection. Enable CORS in LM Studio.</p>
+              <div class="alert-steps">
+                <ol>
+                  <li>Open <strong>LM Studio</strong> app.</li>
+                  <li>Go to the <strong>Developer</strong> tab (<code>&gt;_</code> icon).</li>
+                  <li>Under <strong>Server Settings</strong>, toggle <strong>Enable CORS</strong> to <strong>ON</strong>.</li>
+                  <li>Verify status shows <span class="badge-inline-green">Running</span>.</li>
+                </ol>
+              </div>
+              <div class="alert-cli-note">
+                <span>CLI: <code>lms server start --cors</code></span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Generation Stats (TTFT / Tokens per sec) -->
+          <div id="generation-stats-bar" class="generation-stats-row" style="display: none;">
+            <div class="stat-pill"><span class="lbl">TTFT:</span> <strong id="stat-ttft">-</strong></div>
+            <div class="stat-pill"><span class="lbl">Speed:</span> <strong id="stat-speed">-</strong></div>
+            <div class="stat-pill"><span class="lbl">Tokens:</span> <strong id="stat-count">-</strong></div>
+          </div>
+
+          <!-- Chat Input Controls -->
+          <div class="chat-input-area">
+            <div class="input-row">
+              <textarea id="chat-input" placeholder="Connect to the server to start chat sandbox..." disabled></textarea>
+              <div class="chat-buttons">
+                <button id="btn-clear-chat" class="btn-secondary" title="Clear conversation history" disabled>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                  </svg>
+                </button>
+                <button id="btn-send" class="btn-primary" disabled>
+                  <span>Send</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+                <button id="btn-stop" class="btn-danger" style="display: none;">
+                  <span>Stop</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.chat-window -->
+
+      </div><!-- /.tester-chat-panel -->
+
+      <!-- ── Sidebar Controls (Right - Secondary View) ── -->
+      <div class="tester-sidebar">
+        
+        <!-- Model Settings Card (Consolidated parameter dashboard) -->
+        <div class="card parameters-card">
+          <h3 class="card-title">Model Settings</h3>
+
+          <div class="panel-body">
+            <!-- ── Chat / Inference Settings ── -->
+            <!-- System Prompt -->
+            <div class="field-group">
+              <label for="param-system">System Prompt</label>
+              <textarea id="param-system" class="param-textarea" placeholder="Configure the model's behavior...">You are a helpful assistant.</textarea>
+            </div>
+
+            <!-- Temperature -->
+            <div class="field-group">
+              <div class="slider-header">
+                <label for="param-temp">Temperature</label>
+                <span id="val-temp" class="slider-value">0.7</span>
+              </div>
+              <input type="range" id="param-temp" min="0.0" max="2.0" step="0.1" value="0.7" class="slider" />
+            </div>
+
+            <!-- Context Window -->
+            <div class="field-group">
+              <div class="slider-header">
+                <label for="sidebar-ctx-slider">Context Window</label>
+                <span id="sidebar-val-ctx" class="slider-value">2048 tokens</span>
+              </div>
+              <input type="range" id="sidebar-ctx-slider" min="512" max="16384" step="512" value="2048" class="slider" />
+            </div>
+
+            <!-- Flash Attention Checkbox -->
+            <div class="field-group checkbox-row">
+              <input type="checkbox" id="sidebar-flash" class="styled-checkbox" checked />
+              <label for="sidebar-flash" class="checkbox-label">Enable Flash Attention</label>
+            </div>
+
+            <!-- Hidden: stream always on, max tokens default -->
+            <input type="hidden" id="param-stream" value="true" />
+            <input type="hidden" id="param-max-tokens" value="2048" />
+          </div>
+        </div>
+
+      </div><!-- /.tester-sidebar -->
+
+    </div><!-- /.tester-grid -->
+
+    <!-- ── Developer Diagnostics Logger (Bottom) ── -->
+    <div class="diagnostics-section card">
+      <button id="btn-toggle-diagnostics" class="diagnostics-trigger">
+        <div class="trigger-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+          <h3>Developer API Logs</h3>
+        </div>
+        <span id="diagnostics-toggle-text">Show API Logs</span>
+      </button>
+
+      <div id="diagnostics-content" class="diagnostics-content" style="display: none;">
+        <div class="logs-grid">
+          <div class="log-block">
+            <div class="log-block-header">
+              <span>HTTP Request Payload</span>
+              <button id="btn-copy-req-log" class="btn-mini-copy">Copy</button>
+            </div>
+            <pre><code id="log-request">Ready for API interactions...</code></pre>
+          </div>
+          <div class="log-block">
+            <div class="log-block-header">
+              <span>Server Response Stream / Output Logs</span>
+              <button id="btn-copy-res-log" class="btn-mini-copy">Copy</button>
+            </div>
+            <pre><code id="log-response">Waiting for output...</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.workspace -->
+
+  <!-- ── SEO Guide Section ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>Troubleshooting & Local Developer Guide</h2>
+      
+      <p>LM Studio provides a local model API server conforming to the OpenAI REST specification. When developing browser-based applications that talk to local APIs, security settings and endpoint URLs are the most common points of friction. This guide explains how to properly configure your system.</p>
+
+      <h3>1. Understanding CORS Blocks</h3>
+      <p>By default, web browsers block pages loaded from one origin (such as this web page) from making HTTP requests to another origin (like your local machine at <code>http://localhost:1234</code>). This security feature is called Same-Origin Policy. To allow browser-based testing tools to communicate with LM Studio, CORS headers must be added by the server.</p>
+      <ul>
+        <li><strong>LM Studio GUI:</strong> Click the Developer tab on the left panel, scroll down to <strong>Server Settings</strong>, and switch <strong>"Enable CORS"</strong> to active. This instructs the server to append <code>Access-Control-Allow-Origin: *</code> headers to all responses.</li>
+        <li><strong>LM Studio CLI:</strong> If running the server via command line, launch it with the cors argument: <code>lms server start --cors</code>.</li>
+      </ul>
+
+      <h3>2. Model Loading vs. OpenAI Compatibility</h3>
+      <p>LM Studio features two layers of API endpoints:</p>
+      <ul>
+        <li><strong>OpenAI-Compatible Endpoint (<code>/v1</code>):</strong> Supports standard routes like <code>/v1/chat/completions</code> and <code>/v1/models</code>. This is great for plugging LM Studio into existing code written for OpenAI. However, it requires a model to be pre-loaded in the LM Studio GUI before requests will succeed.</li>
+        <li><strong>Native Endpoint (<code>/api/v1</code>):</strong> Provides granular controller access. Using the native endpoints, this tool can check which models are currently loaded, request specific models to load with defined context sizes, and unload them to free up GPU memory.</li>
+      </ul>
+
+      <h3>3. GPU VRAM Allocation during Model Loading</h3>
+      <p>When loading a model via <code>POST /api/v1/models/load</code>, the configurations specified in the payload affect how much GPU memory is claimed:</p>
+      <ul>
+        <li><strong>Context Length:</strong> A larger context window creates a larger KV cache, which scales linearly with the sequence length. If you experience Out-Of-Memory (OOM) failures when loading, try reducing the context length value (e.g., from 8192 to 2048).</li>
+        <li><strong>Flash Attention:</strong> Speeds up attention calculations and reduces the cache's VRAM footprint. Toggle this on if your GPU engine supports it.</li>
+      </ul>
+    </article>
+  </div>
+</Layout>
+
+<!-- Scoped Styles -->
+<style>
+  /* ── Hero ── */
+  .tool-hero {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 64px 24px 56px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 14px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  /* ── Workspace ── */
+  .workspace {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── Tester Grid (Chat Left, Settings Right) ── */
+  .tester-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .tester-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Inline Badge Label Row ── */
+  .label-row-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    min-height: 24px;
+  }
+
+  .label-row-inline label {
+    margin: 0;
+  }
+
+
+
+  /* ── Alert Box (CORS) inside messages container ── */
+  .alert-box {
+    border-radius: var(--rounded-md);
+    padding: 12px 14px;
+    font-size: 0.8rem;
+  }
+
+  .error-alert {
+    background: rgba(228, 23, 73, 0.04);
+    border: 1px solid rgba(228, 23, 73, 0.2);
+    color: var(--color-primary);
+  }
+
+  .alert-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-error);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .alert-header svg {
+    flex-shrink: 0;
+  }
+
+  .alert-desc {
+    color: var(--color-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  .alert-steps ol {
+    padding-left: 18px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .alert-steps li {
+    color: var(--color-secondary);
+    line-height: 1.4;
+  }
+
+  .badge-inline-green {
+    background: var(--color-success);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .alert-cli-note {
+    background: rgba(28, 43, 51, 0.06);
+    border-radius: var(--rounded-sm);
+    padding: 6px 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.76rem;
+    color: var(--color-primary);
+    text-align: center;
+  }
+
+  /* ── Chat Model Searchable Combobox Dropdown ── */
+  .model-select-wrapper {
+    position: relative;
+    width: 250px; /* Compact width for header bar */
+    max-width: 100%;
+    flex-shrink: 1;
+    min-width: 120px;
+  }
+
+  .model-select-wrapper .custom-select-container {
+    border-radius: var(--rounded-sm);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    overflow: visible !important;
+    height: 32px;
+  }
+
+  .model-select-wrapper input.custom-select-search-input {
+    padding: 6px 36px 6px 10px !important;
+    font-size: 0.82rem;
+    font-weight: 600;
+    height: 30px;
+    cursor: pointer;
+  }
+
+  .model-select-wrapper .custom-select-arrow {
+    width: 32px;
+    height: 30px;
+    cursor: pointer;
+  }
+
+  .model-select-wrapper .custom-select-dropdown {
+    top: 100%;
+    margin-top: 4px;
+    box-shadow: 0 4px 18px rgba(28, 43, 51, 0.12);
+    width: 100%;
+  }
+
+  .btn-mini-unload {
+    font-size: 0.76rem;
+    padding: 5px 12px;
+    border-radius: var(--rounded-sm);
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .section-desc {
+    font-size: 0.82rem;
+    color: var(--color-secondary);
+  }
+
+  /* ── Parameters Card ── */
+  .parameters-card {
+    /* inherits .card from global */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0 0 18px;
+  }
+
+  .panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .settings-divider {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 2px 0;
+  }
+
+  /* Slider — VRAM calculator style */
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .slider-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-tertiary);
+  }
+
+  .param-textarea {
+    height: 72px;
+    font-family: var(--font-family);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    resize: none;
+  }
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Plain checkbox row — no pill container */
+  .checkbox-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Custom styled checkbox */
+  .styled-checkbox {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    background-color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .styled-checkbox:checked {
+    background-color: var(--color-tertiary);
+    border-color: var(--color-tertiary);
+  }
+
+  .styled-checkbox:checked::after {
+    content: "";
+    display: block;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-0.5px, -1px);
+    position: absolute;
+  }
+
+  .styled-checkbox:hover:not(:checked) {
+    border-color: var(--color-tertiary);
+  }
+
+  .styled-checkbox:focus-visible {
+    box-shadow: 0 0 0 2px rgba(8, 102, 255, 0.2);
+  }
+
+  .checkbox-label {
+    margin: 0;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.875rem;
+    cursor: pointer;
+    color: var(--color-primary);
+    line-height: 1.4;
+  }
+
+  /* Slider — clean track, no border */
+  .slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(28, 43, 51, 0.08);
+    outline: none;
+    margin: 8px 0 4px;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-tertiary);
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  /* ── Chat Panel (Left) ── */
+  .tester-chat-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    display: flex;
+    flex-direction: column;
+    height: 520px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(28, 43, 51, 0.04);
+  }
+
+  /* Chat Header Restructured */
+  .active-model-bar {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: nowrap; /* Keep exactly in one row */
+    overflow: visible !important; /* Ensure absolute dropdown lists do not get clipped */
+    height: 52px;
+  }
+
+  .header-server-settings {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+
+  .header-model-settings {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: visible !important;
+  }
+
+  .active-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .header-url-input {
+    width: 160px;
+    padding: 5px 8px !important;
+    font-size: 0.82rem !important;
+    height: 32px;
+  }
+
+  .btn-mini-connect {
+    padding: 5px 12px !important;
+    font-size: 0.8rem !important;
+    height: 32px;
+  }
+
+  /* Chat window & visual separation container */
+  .chat-window {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface);
+    position: relative;
+    min-height: 0;
+  }
+
+  /* Visual separation viewport with top gap spacing */
+  .chat-messages-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background-color: #FAFBFD;
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    margin: 16px 20px 20px;
+    box-shadow: inset 0 2px 6px rgba(28, 43, 51, 0.04);
+    position: relative;
+  }
+
+  .chat-welcome-state {
+    margin: auto;
+    text-align: center;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: var(--color-secondary);
+    padding: 24px;
+  }
+
+  .chat-welcome-state svg {
+    color: rgba(28, 43, 51, 0.2);
+  }
+
+  .chat-welcome-state h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+  }
+
+  .chat-welcome-state p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* Message Bubbles */
+  .chat-messages-container :global(.chat-msg) {
+    display: flex;
+    flex-direction: column;
+    max-width: 75%;
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chat-messages-container :global(.chat-msg.user) {
+    align-self: flex-end;
+  }
+
+  .chat-messages-container :global(.chat-msg.assistant) {
+    align-self: flex-start;
+  }
+
+  .chat-messages-container :global(.chat-msg.system) {
+    align-self: center;
+    max-width: 85%;
+    margin: 6px 0;
+  }
+
+  .chat-messages-container :global(.msg-role-badge) {
+    display: none; /* Hide the text role labels for a cleaner, modern bubble layout */
+  }
+
+  .chat-messages-container :global(.msg-bubble) {
+    padding: 10px 16px;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    word-break: break-word;
+    box-shadow: 0 1px 2px rgba(28, 43, 51, 0.05);
+  }
+
+  .chat-messages-container :global(.chat-msg.user .msg-bubble) {
+    background-color: var(--color-tertiary); /* Meta Blue */
+    color: #FFFFFF;
+    border-radius: 18px 18px 4px 18px;
+    border: none;
+  }
+
+  .chat-messages-container :global(.chat-msg.assistant .msg-bubble) {
+    background-color: #E4E6EB; /* Muted grey bubble */
+    color: var(--color-primary);
+    border-radius: 18px 18px 18px 4px;
+    border: none;
+  }
+
+  .chat-messages-container :global(.chat-msg.assistant.error-bubble .msg-bubble) {
+    background-color: rgba(228, 23, 73, 0.08);
+    color: var(--color-error);
+    border-radius: 18px;
+    border: 1px solid rgba(228, 23, 73, 0.2);
+  }
+
+  .chat-messages-container :global(.chat-msg.system .msg-bubble) {
+    background-color: rgba(28, 43, 51, 0.05);
+    color: var(--color-secondary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 99px;
+    text-align: center;
+    box-shadow: none;
+    border: none;
+  }
+
+  .chat-messages-container :global(.msg-bubble pre) {
+    background-color: #1E293B; /* Slate 800 code blocks */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--rounded-sm);
+    padding: 12px;
+    overflow-x: auto;
+    margin: 10px 0;
+    color: #F8FAFC; /* Muted off-white code text */
+  }
+
+  .chat-messages-container :global(.msg-bubble code) {
+    font-family: 'Courier New', monospace;
+    font-size: 0.88em;
+  }
+
+  .chat-messages-container :global(.msg-bubble p) {
+    color: inherit;
+    margin-bottom: 10px;
+  }
+  .chat-messages-container :global(.msg-bubble p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Chat Input */
+  .chat-input-area {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    padding: 16px 20px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .input-row textarea {
+    flex-grow: 1;
+    height: 40px;
+    min-height: 40px;
+    max-height: 160px;
+    padding: 9px 14px;
+    font-family: var(--font-family);
+    font-size: 0.94rem;
+    line-height: 20px;
+    resize: none;
+    border-radius: var(--rounded-md);
+    overflow-y: hidden;
+  }
+
+  .chat-buttons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    height: 40px;
+  }
+
+  .chat-buttons button {
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  #btn-clear-chat {
+    width: 40px;
+    padding: 0;
+  }
+
+  #btn-send {
+    padding: 0 20px;
+  }
+
+  #btn-stop {
+    padding: 0 20px;
+  }
+
+  .btn-danger {
+    background-color: var(--color-error);
+    color: var(--color-on-primary);
+    font-family: var(--font-family);
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    border-radius: var(--rounded-md);
+  }
+
+  .btn-danger:hover {
+    opacity: 0.88;
+  }
+
+  /* Stats bar */
+  .generation-stats-row {
+    background-color: #fff;
+    border-top: 1px solid var(--color-border);
+    padding: 5px 20px;
+    display: flex;
+    gap: 16px;
+    font-size: 0.75rem;
+    color: rgba(28, 43, 51, 0.4);
+  }
+
+  .stat-pill strong {
+    color: rgba(28, 43, 51, 0.6);
+    font-weight: 600;
+  }
+
+  /* ── Diagnostics section (Bottom) ── */
+  .diagnostics-section {
+    padding: 16px 20px;
+  }
+
+  .diagnostics-trigger {
+    width: 100%;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    color: var(--color-secondary);
+    padding: 0;
+  }
+
+  .trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .trigger-left h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  #diagnostics-toggle-text {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .diagnostics-content {
+    margin-top: 16px;
+    border-top: 1px solid var(--color-border);
+    padding-top: 16px;
+  }
+
+  .logs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .logs-grid { grid-template-columns: 1fr; }
+  }
+
+  .log-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .log-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-mini-copy {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    color: var(--color-secondary);
+    cursor: pointer;
+  }
+
+  .btn-mini-copy:hover {
+    color: var(--color-primary);
+    border-color: rgba(28,43,51,0.25);
+  }
+
+  .log-block pre {
+    background-color: var(--color-neutral);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    padding: 12px;
+    height: 180px;
+    overflow-y: auto;
+    margin: 0;
+  }
+
+  .log-block code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: block;
+    color: var(--color-primary);
+  }
+
+  /* Responsive fixes */
+  @media (max-width: 1024px) {
+    .tester-grid {
+      grid-template-columns: 1fr;
+    }
+    .tester-sidebar {
+      order: -1;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .active-label {
+      display: none;
+    }
+    .active-model-bar {
+      gap: 8px;
+      padding: 8px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .workspace {
+      padding: 24px 16px 40px;
+    }
+    .tool-hero {
+      padding: 40px 16px 32px;
+    }
+    .tester-chat-panel {
+      height: 480px;
+    }
+    .chat-messages-container {
+      padding: 16px;
+      margin: 0 10px 10px;
+    }
+    .input-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .chat-buttons {
+      width: 100%;
+      height: auto;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+    #btn-send, #btn-stop {
+      flex-grow: 1;
+    }
+  }
+</style>
+
+<!-- Script Logic -->
+<script>
+  document.addEventListener('astro:page-load', () => {
+    // DOM Selection
+    const serverUrlInput = document.getElementById('server-url') as HTMLInputElement;
+    if (!serverUrlInput) return; // Safety check for other Astro pages
+
+    const btnConnect = document.getElementById('btn-connect') as HTMLButtonElement;
+    const corsAlert = document.getElementById('cors-alert') as HTMLDivElement;
+    
+    // Model Selection Elements (Searchable Combobox in header)
+    const selectContainer = document.getElementById('chat-model-container') as HTMLDivElement;
+    const selectSearch = document.getElementById('chat-model-search') as HTMLInputElement;
+    const selectArrow = document.getElementById('chat-model-arrow') as HTMLDivElement;
+    const selectDropdown = document.getElementById('chat-model-dropdown') as HTMLDivElement;
+    const selectOptionsList = document.getElementById('chat-model-options') as HTMLDivElement;
+    const hiddenInput = document.getElementById('chat-model-select') as HTMLInputElement;
+
+    const btnUnloadModel = document.getElementById('btn-unload-model') as HTMLButtonElement;
+    
+    // Chat Workspace Views
+    const chatWelcome = document.getElementById('chat-welcome') as HTMLDivElement;
+
+    // Sidebar Parameter Settings
+    const sidebarCtxSlider = document.getElementById('sidebar-ctx-slider') as HTMLInputElement;
+    const sidebarValCtx = document.getElementById('sidebar-val-ctx') as HTMLElement;
+    const sidebarFlash = document.getElementById('sidebar-flash') as HTMLInputElement;
+
+    // Accordion
+    const btnToggleParams = document.getElementById('btn-toggle-params') as HTMLButtonElement;
+    const paramsContent = document.getElementById('params-content') as HTMLDivElement;
+    const paramsArrow = document.getElementById('params-arrow') as SVGElement;
+    
+    // Config parameters
+    const paramSystem = document.getElementById('param-system') as HTMLTextAreaElement;
+    const paramTemp = document.getElementById('param-temp') as HTMLInputElement;
+    const valTemp = document.getElementById('val-temp') as HTMLSpanElement;
+    const paramMaxTokens = document.getElementById('param-max-tokens') as HTMLInputElement;
+    const valMaxTokens = document.getElementById('val-max-tokens') as HTMLSpanElement;
+    const paramStream = document.getElementById('param-stream') as HTMLInputElement;
+
+    // Chat Interface
+    const chatMessages = document.getElementById('chat-messages') as HTMLDivElement;
+    const chatInput = document.getElementById('chat-input') as HTMLTextAreaElement;
+    const btnSend = document.getElementById('btn-send') as HTMLButtonElement;
+    const btnStop = document.getElementById('btn-stop') as HTMLButtonElement;
+    const btnClearChat = document.getElementById('btn-clear-chat') as HTMLButtonElement;
+    
+    // Stats
+    const statsBar = document.getElementById('generation-stats-bar') as HTMLDivElement;
+    const statTtft = document.getElementById('stat-ttft') as HTMLElement;
+    const statSpeed = document.getElementById('stat-speed') as HTMLElement;
+    const statCount = document.getElementById('stat-count') as HTMLElement;
+
+    // Diagnostics
+    const btnToggleDiagnostics = document.getElementById('btn-toggle-diagnostics') as HTMLButtonElement;
+    const diagnosticsContent = document.getElementById('diagnostics-content') as HTMLDivElement;
+    const diagnosticsToggleText = document.getElementById('diagnostics-toggle-text') as HTMLSpanElement;
+    const logRequest = document.getElementById('log-request') as HTMLElement;
+    const logResponse = document.getElementById('log-response') as HTMLElement;
+    const btnCopyReqLog = document.getElementById('btn-copy-req-log') as HTMLButtonElement;
+    const btnCopyResLog = document.getElementById('btn-copy-res-log') as HTMLButtonElement;
+
+    // Client State Variables
+    let isConnected = false;
+    let availableModels: any[] = [];
+    let activeModelId = ''; // Selected model key from dropdown
+    let chatHistory: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [];
+    let currentAbortController: AbortController | null = null;
+    let isGenerating = false;
+
+    let lastSelectedValue = '';
+    let lastSelectedText = '';
+
+    // ── Sliders active display indicators ──
+    paramTemp.addEventListener('input', (e) => {
+      valTemp.textContent = (e.target as HTMLInputElement).value;
+    });
+
+    paramMaxTokens.addEventListener('input', (e) => {
+      valMaxTokens.textContent = (e.target as HTMLInputElement).value;
+    });
+
+    // Sidebar Context slider listener
+    sidebarCtxSlider.addEventListener('input', (e) => {
+      sidebarValCtx.textContent = `${(e.target as HTMLInputElement).value} tokens`;
+    });
+
+    // ── Toggle Diagnostics ──
+    btnToggleDiagnostics.addEventListener('click', () => {
+      const isHidden = diagnosticsContent.style.display === 'none';
+      diagnosticsContent.style.display = isHidden ? 'block' : 'none';
+      diagnosticsToggleText.textContent = isHidden ? 'Hide API Logs' : 'Show API Logs';
+    });
+
+    // Copy handlers
+    btnCopyReqLog.addEventListener('click', () => {
+      navigator.clipboard.writeText(logRequest.textContent || '');
+      btnCopyReqLog.textContent = 'Copied!';
+      setTimeout(() => { btnCopyReqLog.textContent = 'Copy'; }, 1500);
+    });
+    btnCopyResLog.addEventListener('click', () => {
+      navigator.clipboard.writeText(logResponse.textContent || '');
+      btnCopyResLog.textContent = 'Copied!';
+      setTimeout(() => { btnCopyResLog.textContent = 'Copy'; }, 1500);
+    });
+
+    // Auto-adjust Chat Input Textarea height
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = '40px'; // Reset to single line height
+      const scrollHeight = chatInput.scrollHeight;
+      if (scrollHeight > 40) {
+        chatInput.style.height = Math.min(scrollHeight, 160) + 'px';
+        chatInput.style.overflowY = scrollHeight > 160 ? 'auto' : 'hidden';
+      } else {
+        chatInput.style.overflowY = 'hidden';
+      }
+    });
+
+    // Keybindings: Send on Enter, Shift+Enter for new line
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // ── Connect & Connect Action ──
+    btnConnect.addEventListener('click', () => {
+      if (isConnected) {
+        disconnectFromServer();
+      } else {
+        connectToServer();
+      }
+    });
+
+    function disconnectFromServer() {
+      isConnected = false;
+      btnConnect.textContent = 'Connect';
+      btnConnect.className = 'btn-primary btn-mini-connect';
+      serverUrlInput.disabled = false;
+      
+      disableChatState();
+      resetDropdownToDisconnected();
+    }
+
+    btnUnloadModel.addEventListener('click', triggerUnload);
+
+    // ── Searchable Combobox Core Logic ──
+    function openDropdown() {
+      if (!isConnected || selectSearch.disabled) return;
+      selectContainer.classList.add('open');
+      selectSearch.setAttribute('aria-expanded', 'true');
+      selectDropdown.style.display = 'flex';
+      selectSearch.value = ''; // clear for searching
+      filterOptions('');
+    }
+
+    function closeDropdown() {
+      selectContainer.classList.remove('open');
+      selectSearch.setAttribute('aria-expanded', 'false');
+      selectDropdown.style.display = 'none';
+      selectSearch.value = lastSelectedText;
+      selectSearch.blur();
+    }
+
+    selectArrow.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!isConnected || selectSearch.disabled) return;
+      if (selectContainer.classList.contains('open')) {
+        closeDropdown();
+      } else {
+        openDropdown();
+        selectSearch.focus();
+      }
+    });
+
+    selectSearch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!isConnected || selectSearch.disabled) return;
+      if (!selectContainer.classList.contains('open')) {
+        openDropdown();
+      }
+    });
+
+    selectSearch.addEventListener('focus', () => {
+      if (!isConnected || selectSearch.disabled) return;
+      if (!selectContainer.classList.contains('open')) {
+        openDropdown();
+      }
+    });
+
+    selectSearch.addEventListener('input', (e) => {
+      if (!selectContainer.classList.contains('open')) {
+        selectContainer.classList.add('open');
+        selectDropdown.style.display = 'flex';
+      }
+      filterOptions((e.target as HTMLInputElement).value);
+    });
+
+    function filterOptions(query) {
+      const filter = query.toLowerCase().trim();
+      let matches = 0;
+
+      const existingNoResults = selectOptionsList.querySelector('.custom-select-no-results');
+      if (existingNoResults) existingNoResults.remove();
+
+      const options = selectOptionsList.querySelectorAll('.custom-select-option');
+      options.forEach(opt => {
+        const text = opt.textContent.toLowerCase();
+        if (text.includes(filter)) {
+          (opt as HTMLElement).style.display = 'block';
+          matches++;
+        } else {
+          (opt as HTMLElement).style.display = 'none';
+        }
+      });
+
+      if (matches === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'custom-select-no-results';
+        noResults.textContent = 'No options found';
+        selectOptionsList.appendChild(noResults);
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!selectContainer.contains(e.target as Node)) {
+        if (selectContainer.classList.contains('open')) {
+          closeDropdown();
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && selectContainer.classList.contains('open')) {
+        closeDropdown();
+      }
+    });
+
+    async function connectToServer(silent = false) {
+      const baseUrl = serverUrlInput.value.trim().replace(/\/+$/, '');
+      
+      // Reset UI
+      btnConnect.textContent = 'Connecting...';
+      btnConnect.disabled = true;
+      serverUrlInput.disabled = true;
+      corsAlert.style.display = 'none';
+      selectSearch.disabled = true;
+
+      // Log request in diagnostics
+      logRequest.textContent = `GET ${baseUrl}/api/v1/models\nHeaders: {}\nPayload: None`;
+
+      try {
+        const response = await fetch(`${baseUrl}/api/v1/models`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        logResponse.textContent = JSON.stringify(data, null, 2);
+
+        isConnected = true;
+        btnConnect.textContent = 'Disconnect';
+        btnConnect.className = 'btn-secondary btn-mini-connect';
+        btnConnect.disabled = false;
+        
+        availableModels = data.models || [];
+        
+        populateModelsDropdown();
+        onModelSelectionChange();
+        
+      } catch (err: any) {
+        console.warn('Native endpoint failed, trying OpenAI compatibility endpoint fallback...', err);
+        
+        // Fallback to OpenAI standard /v1/models endpoint
+        try {
+          logRequest.textContent += `\n\n[Fallback] GET ${baseUrl}/v1/models`;
+          
+          const response = await fetch(`${baseUrl}/v1/models`, {
+            method: 'GET',
+            mode: 'cors'
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI endpoint returned HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          logResponse.textContent = `[Fallback Response]\n` + JSON.stringify(data, null, 2);
+
+          isConnected = true;
+          btnConnect.textContent = 'Disconnect';
+          btnConnect.className = 'btn-secondary btn-mini-connect';
+          btnConnect.disabled = false;
+
+          // Convert OpenAI models format `{ data: [{ id: "..." }] }` to native-like
+          const openAiModels = data.data || [];
+          availableModels = openAiModels.map((m: any) => ({
+            key: m.id,
+            display_name: m.id.split('/').pop() || m.id,
+            loaded_instances: [{ id: m.id, config: { context_length: 2048 } }]
+          }));
+
+          populateModelsDropdown();
+          onModelSelectionChange();
+
+        } catch (fallbackErr: any) {
+          console.error('All connection attempts failed:', fallbackErr);
+          logResponse.textContent = `Connection Error:\n${fallbackErr.message}\n\nTroubleshooting Hint:\n- Check console logs.\n- Ensure server is active.\n- Verify CORS headers.`;
+          
+          isConnected = false;
+          btnConnect.textContent = 'Connect';
+          btnConnect.className = 'btn-primary btn-mini-connect';
+          btnConnect.disabled = false;
+          serverUrlInput.disabled = false;
+          
+          if (!silent) {
+            corsAlert.style.display = 'block';
+            chatWelcome.style.display = 'none';
+          }
+          
+          disableChatState();
+          resetDropdownToDisconnected();
+        }
+      }
+    }
+
+    function resetDropdownToDisconnected() {
+      selectSearch.value = '';
+      selectSearch.placeholder = 'Connect to server first...';
+      selectSearch.disabled = true;
+      hiddenInput.value = '';
+      lastSelectedValue = '';
+      lastSelectedText = '';
+      selectOptionsList.innerHTML = '';
+    }
+
+    function populateModelsDropdown() {
+      selectOptionsList.innerHTML = '';
+      hiddenInput.value = '';
+      lastSelectedValue = '';
+      lastSelectedText = '';
+      selectSearch.value = '';
+      
+      if (!availableModels || availableModels.length === 0) {
+        selectSearch.placeholder = 'No models downloaded';
+        selectSearch.disabled = true;
+        return;
+      }
+
+      selectSearch.placeholder = 'Select a model...';
+      selectSearch.disabled = false;
+      
+      availableModels.forEach((model) => {
+        const opt = document.createElement('div');
+        opt.className = 'custom-select-option';
+        opt.setAttribute('data-value', model.key);
+        opt.setAttribute('role', 'option');
+        opt.textContent = model.display_name || model.key;
+        
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectOption(model.key, opt.textContent);
+        });
+
+        selectOptionsList.appendChild(opt);
+      });
+
+      // Auto select first model if available
+      if (availableModels.length > 0) {
+        const first = availableModels[0];
+        selectOption(first.key, first.display_name || first.key);
+      }
+    }
+
+    function selectOption(value, text) {
+      hiddenInput.value = value;
+      lastSelectedValue = value;
+      lastSelectedText = text;
+      selectSearch.value = text;
+      
+      const options = selectOptionsList.querySelectorAll('.custom-select-option');
+      options.forEach(o => {
+        if (o.getAttribute('data-value') === value) {
+          o.classList.add('selected');
+        } else {
+          o.classList.remove('selected');
+        }
+      });
+      
+      closeDropdown();
+      onModelSelectionChange();
+    }
+
+    // Handles view changes based on the selected dropdown model's state
+    function onModelSelectionChange() {
+      const selectedKey = hiddenInput.value;
+      if (!selectedKey) {
+        disableChatState();
+        return;
+      }
+
+      const model = availableModels.find(m => m.key === selectedKey);
+      if (!model) {
+        disableChatState();
+        return;
+      }
+
+      const isLoaded = model.loaded_instances && model.loaded_instances.length > 0;
+      
+      if (isLoaded) {
+        const loadedInstance = model.loaded_instances[0];
+        activeModelId = loadedInstance.id;
+        btnUnloadModel.style.display = 'inline-flex';
+      } else {
+        activeModelId = '';
+        btnUnloadModel.style.display = 'none';
+      }
+
+      if (isConnected) {
+        enableChatState();
+      } else {
+        disableChatState();
+      }
+    }
+
+    // Load Model API call (called automatically during sendMessage)
+    async function loadModelAuto(baseUrl: string, modelKey: string, contextLength: number, flashAttention: boolean) {
+      const payload = {
+        model: modelKey,
+        context_length: contextLength,
+        flash_attention: flashAttention
+      };
+
+      logRequest.textContent = `POST ${baseUrl}/api/v1/models/load\nContent-Type: application/json\n\n${JSON.stringify(payload, null, 2)}`;
+
+      const response = await fetch(`${baseUrl}/api/v1/models/load`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to load model'}`);
+      }
+
+      const resData = await response.json();
+      logResponse.textContent = JSON.stringify(resData, null, 2);
+    }
+
+    // Unload active model trigger
+    async function triggerUnload() {
+      const selectedKey = hiddenInput.value;
+      if (!selectedKey) return;
+
+      const model = availableModels.find(m => m.key === selectedKey);
+      if (!model || !model.loaded_instances || model.loaded_instances.length === 0) return;
+
+      const instanceId = model.loaded_instances[0].id;
+      const baseUrl = serverUrlInput.value.trim().replace(/\/+$/, '');
+
+      // Lock UI
+      btnUnloadModel.disabled = true;
+      btnUnloadModel.textContent = 'Unloading...';
+      selectSearch.disabled = true;
+      btnConnect.disabled = true;
+
+      const payload = { instance_id: instanceId };
+      logRequest.textContent = `POST ${baseUrl}/api/v1/models/unload\nContent-Type: application/json\n\n${JSON.stringify(payload, null, 2)}`;
+
+      try {
+        const response = await fetch(`${baseUrl}/api/v1/models/unload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to unload model'}`);
+        }
+
+        const resData = await response.json();
+        logResponse.textContent = JSON.stringify(resData, null, 2);
+
+        // Re-fetch models and restore selection
+        await refreshModelsAndSelect(selectedKey);
+
+      } catch (err: any) {
+        console.error('Failed to unload model:', err);
+        logResponse.textContent = `Failed to unload model:\n${err.message}`;
+        alert(`Failed to unload model: ${err.message}`);
+        
+        // Unlock
+        btnUnloadModel.disabled = false;
+        btnUnloadModel.textContent = 'Unload';
+        selectSearch.disabled = false;
+        btnConnect.disabled = false;
+      }
+    }
+
+    // Help function to reload state and preserve selector key
+    async function refreshModelsAndSelect(selectedKey: string) {
+      const baseUrl = serverUrlInput.value.trim().replace(/\/+$/, '');
+      
+      try {
+        const response = await fetch(`${baseUrl}/api/v1/models`, { method: 'GET' });
+        if (response.ok) {
+          const data = await response.json();
+          availableModels = data.models || [];
+        }
+      } catch (err) {
+        console.error('Silent refresh failed:', err);
+      }
+
+      // Unlock UI
+      btnConnect.disabled = false;
+      selectSearch.disabled = false;
+      btnUnloadModel.disabled = false;
+      btnUnloadModel.textContent = 'Unload';
+
+      populateModelsDropdown();
+      
+      if (selectedKey && Array.from(selectOptionsList.querySelectorAll('.custom-select-option')).some(o => o.getAttribute('data-value') === selectedKey)) {
+        const matchingOpt = Array.from(selectOptionsList.querySelectorAll('.custom-select-option')).find(o => o.getAttribute('data-value') === selectedKey);
+        selectOption(selectedKey, matchingOpt ? matchingOpt.textContent : selectedKey);
+      } else {
+        onModelSelectionChange();
+      }
+    }
+
+    function enableChatState() {
+      chatInput.disabled = false;
+      btnSend.disabled = false;
+      btnClearChat.disabled = false;
+      chatInput.placeholder = 'Type a message... (Press Enter to send, Shift+Enter for new line)';
+    }
+
+    function disableChatState() {
+      activeModelId = '';
+      chatInput.disabled = true;
+      btnSend.disabled = true;
+      btnClearChat.disabled = true;
+      chatInput.placeholder = 'Connect to the server to start chat sandbox...';
+      btnUnloadModel.style.display = 'none';
+      chatWelcome.style.display = 'flex';
+      
+      // Clean chat history UI
+      const chatBubbles = chatMessages.querySelectorAll('.chat-msg');
+      chatBubbles.forEach(b => b.remove());
+      statsBar.style.display = 'none';
+    }
+
+    // ── Clear Chat ──
+    btnClearChat.addEventListener('click', () => {
+      chatHistory = [];
+      const chatBubbles = chatMessages.querySelectorAll('.chat-msg');
+      chatBubbles.forEach(b => b.remove());
+      statsBar.style.display = 'none';
+    });
+
+    // ── Send Message & Streaming completions ──
+    btnSend.addEventListener('click', sendMessage);
+    btnStop.addEventListener('click', stopGeneration);
+
+    function stopGeneration() {
+      if (currentAbortController) {
+        currentAbortController.abort();
+        isGenerating = false;
+        btnSend.style.display = 'inline-flex';
+        btnStop.style.display = 'none';
+        chatInput.disabled = false;
+        
+        appendMessage('system', 'Generation stopped by user.');
+      }
+    }
+
+    async function sendMessage() {
+      const prompt = chatInput.value.trim();
+      const selectedKey = hiddenInput.value;
+      if (!prompt || !selectedKey || isGenerating) return;
+
+      chatWelcome.style.display = 'none';
+
+      // Lock UI
+      isGenerating = true;
+      btnSend.style.display = 'none';
+      btnStop.style.display = 'inline-flex';
+      chatInput.disabled = true;
+      statsBar.style.display = 'none';
+
+      // Clear input
+      chatInput.value = '';
+      chatInput.style.height = '40px';
+
+      // Add user message
+      appendMessage('user', prompt);
+      chatHistory.push({ role: 'user', content: prompt });
+
+      const model = availableModels.find(m => m.key === selectedKey);
+      const isLoaded = model && model.loaded_instances && model.loaded_instances.length > 0;
+      const baseUrl = serverUrlInput.value.trim().replace(/\/+$/, '');
+
+      try {
+        // ── Auto Loading logic on demand ──
+        if (!isLoaded) {
+          const systemMsgIndex = appendMessage('system', `Loading model "${model?.display_name || selectedKey}" into memory... (This may take a moment depending on your specs)`);
+          
+          const contextLength = parseInt(sidebarCtxSlider.value) || 2048;
+          const flashAttention = sidebarFlash.checked;
+          
+          await loadModelAuto(baseUrl, selectedKey, contextLength, flashAttention);
+          
+          // Re-fetch models quietly
+          try {
+            const refreshRes = await fetch(`${baseUrl}/api/v1/models`, { method: 'GET' });
+            if (refreshRes.ok) {
+              const refreshData = await refreshRes.json();
+              availableModels = refreshData.models || [];
+            }
+          } catch (e) {
+            console.warn('Silent refresh failed during auto load:', e);
+          }
+
+          // Update loading message to successful
+          const systemMsgEl = chatMessages.querySelectorAll('.chat-msg.system')[systemMsgIndex];
+          if (systemMsgEl) {
+            systemMsgEl.querySelector('.msg-bubble').textContent = `✓ Model "${model?.display_name || selectedKey}" loaded successfully. Initiating inference...`;
+          }
+
+          // Refresh dropdown & dot state
+          populateModelsDropdown();
+          
+          // Re-select option
+          const matchingOpt = Array.from(selectOptionsList.querySelectorAll('.custom-select-option')).find(o => o.getAttribute('data-value') === selectedKey);
+          selectOption(selectedKey, matchingOpt ? matchingOpt.textContent : selectedKey);
+        }
+
+        // Get updated model instance ID
+        const updatedModel = availableModels.find(m => m.key === selectedKey);
+        const activeInstanceId = updatedModel && updatedModel.loaded_instances && updatedModel.loaded_instances.length > 0 
+          ? updatedModel.loaded_instances[0].id 
+          : selectedKey;
+
+        // Build completion payload
+        const messagesPayload: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [];
+        const systemVal = paramSystem.value.trim();
+        if (systemVal) {
+          messagesPayload.push({ role: 'system', content: systemVal });
+        }
+        messagesPayload.push(...chatHistory);
+
+        const temp = parseFloat(paramTemp.value);
+        const maxTokens = parseInt(paramMaxTokens.value);
+        const stream = true; // Always stream
+
+        const completionsUrl = `${baseUrl}/v1/chat/completions`;
+        const requestBody = {
+          model: activeInstanceId,
+          messages: messagesPayload,
+          temperature: temp,
+          max_tokens: maxTokens,
+          stream: stream
+        };
+
+        logRequest.textContent = `POST ${completionsUrl}\nContent-Type: application/json\n\n${JSON.stringify(requestBody, null, 2)}`;
+        logResponse.textContent = `Sending request...`;
+
+        currentAbortController = new AbortController();
+
+        const assistantMessageIndex = appendMessage('assistant', '');
+        const assistantBubbleEl = chatMessages.querySelectorAll('.chat-msg.assistant')[assistantMessageIndex].querySelector('.msg-bubble') as HTMLDivElement;
+
+        let assistantText = '';
+        const startTime = performance.now();
+        let firstTokenTime: number | null = null;
+        let tokenCount = 0;
+
+        const response = await fetch(completionsUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer lm-studio'
+          },
+          body: JSON.stringify(requestBody),
+          signal: currentAbortController.signal
+        });
+
+        if (!response.ok) {
+          const errorMsg = await response.text();
+          throw new Error(`Server returned HTTP ${response.status}: ${errorMsg}`);
+        }
+
+        if (!stream) {
+          // Non-streaming completions
+          const resData = await response.json();
+          logResponse.textContent = JSON.stringify(resData, null, 2);
+
+          assistantText = resData.choices[0]?.message?.content || '';
+          renderAssistantMarkdown(assistantBubbleEl, assistantText);
+          chatHistory.push({ role: 'assistant', content: assistantText });
+
+          const totalDuration = (performance.now() - startTime) / 1000;
+          const usage = resData.usage || {};
+          const compTokens = usage.completion_tokens || estimateTokens(assistantText);
+          const tps = compTokens / totalDuration;
+          
+          showStats(totalDuration * 1000, tps, compTokens);
+
+        } else {
+          // Streaming completions (SSE)
+          const reader = response.body?.getReader();
+          if (!reader) throw new Error('ReadableStream not supported by browser.');
+
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+          logResponse.textContent = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const cleanLine = line.trim();
+              if (!cleanLine) continue;
+
+              logResponse.textContent += cleanLine + '\n';
+              logResponse.scrollTop = logResponse.scrollHeight;
+
+              if (cleanLine === 'data: [DONE]') {
+                break;
+              }
+
+              if (cleanLine.startsWith('data: ')) {
+                try {
+                  const json = JSON.parse(cleanLine.substring(6));
+                  const chunkContent = json.choices[0]?.delta?.content || '';
+                  
+                  if (chunkContent) {
+                    if (firstTokenTime === null) {
+                      firstTokenTime = performance.now() - startTime;
+                    }
+
+                    tokenCount++;
+                    assistantText += chunkContent;
+                    
+                    assistantBubbleEl.textContent = assistantText;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                  }
+                } catch (jsonErr) {
+                  console.debug('JSON parse warning for SSE line:', cleanLine, jsonErr);
+                }
+              }
+            }
+          }
+
+          renderAssistantMarkdown(assistantBubbleEl, assistantText);
+          chatHistory.push({ role: 'assistant', content: assistantText });
+
+          const totalDuration = (performance.now() - startTime) / 1000;
+          const tps = tokenCount / totalDuration;
+          showStats(firstTokenTime || 0, tps, tokenCount);
+        }
+
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          console.log('User aborted streaming generation.');
+        } else {
+          console.error('Inference request failed:', err);
+          appendMessage('system', `Error: ${err.message}`);
+          logResponse.textContent = `Error occurred during request:\n${err.stack || err.message}`;
+        }
+      } finally {
+        isGenerating = false;
+        btnSend.style.display = 'inline-flex';
+        btnStop.style.display = 'none';
+        chatInput.disabled = false;
+        currentAbortController = null;
+        
+        setTimeout(() => chatInput.focus(), 50);
+      }
+    }
+
+    // Display generation metrics
+    function showStats(ttftMs: number, tokensPerSec: number, count: number) {
+      statsBar.style.display = 'flex';
+      statTtft.textContent = `${Math.round(ttftMs)} ms`;
+      statSpeed.textContent = tokensPerSec > 0 ? `${tokensPerSec.toFixed(1)} t/s` : 'N/A';
+      statCount.textContent = `${count} tokens`;
+    }
+
+    function estimateTokens(text: string): number {
+      return Math.round(text.split(/\s+/).length * 1.3);
+    }
+
+    function appendMessage(role: 'system' | 'user' | 'assistant', content: string): number {
+      const msgWrap = document.createElement('div');
+      msgWrap.className = `chat-msg ${role}`;
+      
+      const badge = document.createElement('span');
+      badge.className = 'msg-role-badge';
+      badge.textContent = role;
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.textContent = content;
+
+      if (role !== 'system') {
+        msgWrap.appendChild(badge);
+      }
+      msgWrap.appendChild(bubble);
+      
+      chatMessages.appendChild(msgWrap);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      return chatMessages.querySelectorAll(`.chat-msg.${role}`).length - 1;
+    }
+
+    function renderAssistantMarkdown(containerEl: HTMLDivElement, text: string) {
+      if (!text) {
+        containerEl.innerHTML = '<span style="color:var(--color-secondary); font-style:italic;">No response content returned.</span>';
+        return;
+      }
+
+      // Escape HTML
+      let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Handle Code Blocks
+      const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+      html = html.replace(codeBlockRegex, (match, lang, code) => {
+        return `<pre><code class="language-${lang}">${code.trim()}</code></pre>`;
+      });
+
+      // Handle inline code
+      html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+      const paragraphs = html.split('\n\n');
+      const formatted = paragraphs.map(p => {
+        if (p.trim().startsWith('<pre>')) return p;
+        return `<p>${p.replace(/\n/g, '<br/>')}</p>`;
+      }).join('');
+
+      containerEl.innerHTML = formatted;
+    }
+    // ── Auto-connect on page load ──
+    // Silently attempt connection to the default URL; don't show CORS alert on failure
+    connectToServer(true).catch(() => {});
+  });
+</script>

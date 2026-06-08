@@ -113,6 +113,31 @@ p  { color: var(--color-secondary); margin-bottom: var(--spacing-md); }
 }
 .btn-secondary:hover { background-color: var(--color-neutral); border-color: rgba(28,43,51,0.2); }
 
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface);
+  color: var(--color-secondary);
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--rounded-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.btn-ghost:hover {
+  color: var(--color-primary);
+  border-color: rgba(28, 43, 51, 0.2);
+}
+
+
 /* Layout */
 .container {
   width: 100%;
@@ -133,7 +158,7 @@ label {
   letter-spacing: 0.04em;
 }
 
-textarea, input[type="text"], select {
+textarea, input[type="text"], input[type="number"], select {
   width: 100%;
   padding: 12px 14px;
   font-family: var(--font-family);
@@ -145,9 +170,21 @@ textarea, input[type="text"], select {
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-textarea:focus, input[type="text"]:focus, select:focus {
+textarea:focus, input[type="text"]:focus, input[type="number"]:focus, select:focus {
   border-color: var(--color-tertiary);
   box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23606770' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px; /* Leaves space for the custom chevron arrow */
+  cursor: pointer;
 }
 
 /* Card */
@@ -224,4 +261,260 @@ textarea:focus, input[type="text"]:focus, select:focus {
   background: transparent;
   padding: 0;
   border-radius: 0;
+}
+
+/* ── Common Stats Grid Components ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--rounded-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.stat-card h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-family: var(--font-family);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--color-secondary);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.stat-header h3 { margin: 0; }
+
+.model-tag {
+  font-size: 0.65rem;
+  background: var(--color-neutral);
+  padding: 2px 6px;
+  border-radius: 12px;
+  color: var(--color-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── Segmented Control Components ── */
+.segmented-control {
+  display: flex;
+  background: rgba(28, 43, 51, 0.06);
+  padding: 2px;
+  border-radius: var(--rounded-sm);
+}
+
+.segment-btn {
+  background: none;
+  border: none;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  color: var(--color-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.segment-btn.active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Searchable Combobox (Design System Standard) ── */
+/* Reusable searchable dropdown/combobox component.
+   Use this for any dropdown that needs search/filter capabilities.
+
+   HTML Structure:
+     .custom-select-container > input.custom-select-search-input
+       + .custom-select-arrow (contains chevron SVG)
+       + .custom-select-dropdown > .custom-select-options > .custom-select-option
+     + input[type="hidden"] (stores the selected value)
+
+   JS Setup:
+     Call setupSearchableCombobox('prefix', 'hiddenInputId') where 'prefix'
+     matches the id prefix of the container/search/arrow/dropdown/options elements.
+
+   IMPORTANT: The dropdown is absolutely positioned and will be clipped by any
+   ancestor with overflow:hidden. The rule below prevents this for the direct
+   parent, but deeply nested layouts may need overflow:visible set manually. */
+
+/* Prevent parent containers from clipping the dropdown */
+.custom-select-container:has(+ *),
+:has(> .custom-select-container) {
+  overflow: visible !important;
+}
+
+.custom-select-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--rounded-md);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.custom-select-container.open,
+.custom-select-container:focus-within {
+  border-color: var(--color-tertiary);
+  box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+}
+
+input.custom-select-search-input,
+input.custom-select-search-input[type="text"] {
+  flex-grow: 1;
+  width: 100%;
+  padding: 12px 40px 12px 14px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--color-primary);
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  text-overflow: ellipsis;
+  margin: 0 !important;
+}
+
+input.custom-select-search-input:focus,
+input.custom-select-search-input[type="text"]:focus {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+input.custom-select-search-input::placeholder {
+  font-weight: 400;
+  color: var(--color-secondary);
+}
+
+.custom-select-arrow {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  color: var(--color-secondary);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  background: transparent;
+  pointer-events: none;
+}
+
+.custom-select-container.open .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--rounded-md);
+  box-shadow: 0 8px 30px rgba(28, 43, 51, 0.16);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.custom-select-options {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-select-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-select-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb {
+  background-color: rgba(28, 43, 51, 0.15);
+  border-radius: 3px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(28, 43, 51, 0.3);
+}
+
+.custom-select-option {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--color-primary);
+  border-bottom: 1px solid rgba(28, 43, 51, 0.03);
+  transition: background-color 0.15s ease, color 0.15s ease;
+  text-align: left;
+  user-select: none;
+}
+
+.custom-select-option:last-child {
+  border-bottom: none;
+}
+
+.custom-select-option:hover,
+.custom-select-option.highlighted {
+  background-color: var(--color-neutral);
+}
+
+.custom-select-option.selected {
+  background-color: rgba(8, 102, 255, 0.08);
+  color: var(--color-tertiary);
+  font-weight: 600;
+}
+
+.custom-select-no-results {
+  padding: 16px;
+  font-size: 0.85rem;
+  color: var(--color-secondary);
+  text-align: center;
 }

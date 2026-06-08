@@ -1,0 +1,1619 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { MODELS, GPUS, QUANTIZATIONS } from '../data/vram-calculator';
+---
+
+<Layout 
+  title="LLM VRAM Calculator — Estimate GPU Memory for AI Models" 
+  description="Calculate LLM memory requirements (Weights, KV Cache, Activations, Overhead) and check GPU compatibility for local LLM inference across RTX 3090, 4090, Apple Silicon, and A100."
+>
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">AI Tools</p>
+    <h1 class="tool-title">LLM VRAM <em class="accent">Calculator</em></h1>
+    <p class="tool-desc">Estimate static and dynamic GPU memory requirements for running Large Language Models locally.</p>
+  </div>
+
+  <!-- ── Workspace ── -->
+  <div class="workspace">
+    
+    <!-- Top Row: Configuration Inputs + VRAM Budget -->
+    <div class="editor-grid">
+      
+      <!-- Inputs Panel -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <span class="step-num">1</span>
+            <h2>Configuration Inputs</h2>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <!-- Model preset -->
+          <div class="field-group">
+            <label for="model-preset">Model Preset</label>
+            <div class="custom-select-container" id="model-select-container">
+              <input type="text" id="model-select-search" class="custom-select-search-input" placeholder="Search or select a model..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+              <div class="custom-select-arrow" id="model-select-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="custom-select-dropdown" id="model-select-dropdown" style="display: none;">
+                <div class="custom-select-options" id="model-select-options" role="listbox">
+                  {MODELS.map(m => (
+                    <div class="custom-select-option" data-value={m.id} role="option">{m.name}</div>
+                  ))}
+                  <div class="custom-select-option custom-option" data-value="custom" role="option">⚙️ Custom Model Architecture...</div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="model-preset" value="qwen3.5-9b" />
+          </div>
+
+          <!-- Custom specs overrides -->
+          <div id="custom-specs-group" class="custom-specs" style="display: none;">
+            <div class="specs-grid">
+              <div class="field-group">
+                <label for="custom-params">Total Parameters (Billion)</label>
+                <input type="number" id="custom-params" value="8" step="0.1" min="0.1" />
+              </div>
+              <div class="field-group">
+                <label for="custom-active-params">Active Params (MoE) <span>(Optional)</span></label>
+                <input type="number" id="custom-active-params" value="" step="0.1" min="0.1" placeholder="e.g. 2.0" />
+              </div>
+              <div class="field-group">
+                <label for="custom-layers">Layers</label>
+                <input type="number" id="custom-layers" value="32" min="1" />
+              </div>
+              <div class="field-group">
+                <label for="custom-hidden">Hidden Size</label>
+                <input type="number" id="custom-hidden" value="4096" min="1" />
+              </div>
+              <div class="field-group">
+                <label for="custom-heads">Attention Heads</label>
+                <input type="number" id="custom-heads" value="32" min="1" />
+              </div>
+              <div class="field-group">
+                <label for="custom-kv-heads">KV Heads (GQA)</label>
+                <input type="number" id="custom-kv-heads" value="8" min="1" />
+              </div>
+            </div>
+            <div class="specs-grid" style="margin-top: 12px;">
+              <div class="field-group" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                <input type="checkbox" id="custom-has-kv" checked style="width: auto; margin: 0;" />
+                <label for="custom-has-kv" class="checkbox-label">Model has standard KV Cache</label>
+              </div>
+            </div>
+            <p class="caption">GQA (Grouped Query Attention) has fewer KV heads than attention heads. State-Space Models (like Mamba) do not use a standard KV Cache.</p>
+          </div>
+
+          <!-- Target hardware configuration -->
+          <div class="specs-grid">
+            <div class="field-group">
+              <label for="gpu-preset-search">Active GPU Setup</label>
+              <div class="custom-select-container" id="gpu-preset-container">
+                <input type="text" id="gpu-preset-search" class="custom-select-search-input" placeholder="Search GPUs..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                <div class="custom-select-arrow" id="gpu-preset-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="gpu-preset-dropdown" style="display: none;">
+                  <div class="custom-select-options" id="gpu-preset-options" role="listbox">
+                    {GPUS.map(g => (
+                      <div class="custom-select-option" data-value={g.id} role="option">{g.name}</div>
+                    ))}
+                    <div class="custom-select-option custom-option" data-value="custom" role="option">⚙️ Custom GPU Specs...</div>
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="gpu-preset" value="rtx-5090-32g" />
+            </div>
+            <div class="field-group">
+              <label for="gpu-count">Number of GPUs</label>
+              <input type="number" id="gpu-count" value="1" min="1" max="16" />
+            </div>
+          </div>
+
+          <!-- Interconnect Group -->
+          <div id="interconnect-group" class="specs-grid" style="display: none; margin-top: 12px;">
+            <div class="field-group" style="grid-column: 1 / -1;">
+              <label for="gpu-interconnect-search">GPU Interconnect Type (Scaling)</label>
+              <div class="custom-select-container" id="gpu-interconnect-container">
+                <input type="text" id="gpu-interconnect-search" class="custom-select-search-input" placeholder="Search interconnect..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                <div class="custom-select-arrow" id="gpu-interconnect-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="gpu-interconnect-dropdown" style="display: none;">
+                  <div class="custom-select-options" id="gpu-interconnect-options" role="listbox">
+                    <div class="custom-select-option" data-value="0.95" role="option">NVLink / NVSwitch (0.95x)</div>
+                    <div class="custom-select-option" data-value="0.90" role="option">PCIe 5.0 x16 (0.90x)</div>
+                    <div class="custom-select-option" data-value="0.85" role="option">PCIe 4.0 x16 (0.85x) — Default</div>
+                    <div class="custom-select-option" data-value="0.80" role="option">PCIe 3.0 x16 (0.80x)</div>
+                    <div class="custom-select-option" data-value="0.75" role="option">PCIe 4.0 x8 / PCIe 3.0 x16 Half-Speed (0.75x)</div>
+                    <div class="custom-select-option" data-value="0.60" role="option">eGPU / PCIe 3.0 x8 (0.60x)</div>
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="gpu-interconnect" value="0.85" />
+            </div>
+          </div>
+
+          <!-- Custom GPU Specs -->
+          <div id="custom-gpu-group" class="custom-specs" style="display: none; margin-top: 12px;">
+            <div class="specs-grid">
+              <div class="field-group">
+                <label for="custom-gpu-vram">VRAM per GPU (GB)</label>
+                <input type="number" id="custom-gpu-vram" value="24" step="1" min="1" />
+              </div>
+              <div class="field-group">
+                <label for="custom-gpu-bandwidth">Bandwidth (GB/s)</label>
+                <input type="number" id="custom-gpu-bandwidth" value="1000" step="10" min="10" />
+              </div>
+              <div class="field-group">
+                <label for="custom-gpu-tflops">FP16 Tensor TFLOPS</label>
+                <input type="number" id="custom-gpu-tflops" value="330" step="10" min="1" />
+              </div>
+              <div class="field-group">
+                <label for="custom-gpu-tdp">TDP per GPU (Watts)</label>
+                <input type="number" id="custom-gpu-tdp" value="350" step="10" min="10" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Precision and Quant -->
+          <div class="specs-grid" style="margin-top: 12px;">
+            <div class="field-group">
+              <label for="weight-quant-search">Model Weights Precision</label>
+              <div class="custom-select-container" id="weight-quant-container">
+                <input type="text" id="weight-quant-search" class="custom-select-search-input" placeholder="Search precision..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                <div class="custom-select-arrow" id="weight-quant-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="weight-quant-dropdown" style="display: none;">
+                  <div class="custom-select-options" id="weight-quant-options" role="listbox">
+                    {QUANTIZATIONS.filter(q => q.group === 'weights').map(q => (
+                      <div class="custom-select-option" data-value={q.id} role="option">{q.name}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="weight-quant" value="fp16" />
+            </div>
+            
+            <div class="field-group" id="kv-quant-group">
+              <label for="kv-quant-search">KV Cache Precision</label>
+              <div class="custom-select-container" id="kv-quant-container">
+                <input type="text" id="kv-quant-search" class="custom-select-search-input" placeholder="Search precision..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                <div class="custom-select-arrow" id="kv-quant-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="kv-quant-dropdown" style="display: none;">
+                  <div class="custom-select-options" id="kv-quant-options" role="listbox">
+                    {QUANTIZATIONS.filter(q => q.group === 'kv-cache').map(q => (
+                      <div class="custom-select-option" data-value={q.id} role="option">{q.name}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="kv-quant" value="kv-fp16" />
+            </div>
+          </div>
+
+          <!-- Context size slider -->
+          <div class="field-group" style="margin-top: 12px;">
+            <div class="slider-header">
+              <label for="context-length">Context Length</label>
+              <span class="slider-value" id="context-val">4,096 tokens</span>
+            </div>
+            <input type="range" id="context-length" min="512" max="262144" step="512" value="4096" class="slider" />
+
+          </div>
+        </div>
+      </div>
+
+      <!-- VRAM Budget Panel -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <span class="step-num">2</span>
+            <h2>VRAM Budget & Allocation</h2>
+          </div>
+          <div class="panel-bar-right"></div>
+        </div>
+
+        <div class="results-content">
+          <!-- VRAM gauge meter -->
+          <div class="vram-gauge-card">
+            <div class="gauge-header">
+              <span class="gauge-label">Total VRAM Allocation</span>
+              <span class="gauge-status-badge" id="gauge-status">COMPATIBLE</span>
+            </div>
+            <div class="gauge-display">
+              <span class="gauge-number" id="total-vram-text">17.52 GB</span>
+              <span class="gauge-limit" id="total-limit-text">of 24.00 GB</span>
+            </div>
+            <div class="gauge-bar-outer">
+              <div class="gauge-bar-inner" id="gauge-bar-fill" style="width: 73%;"></div>
+            </div>
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="gauge-label">Token Speed (Generation)</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);" id="speed-value">~57 t/s</div>
+              </div>
+              <div style="text-align: right;">
+                <div class="gauge-label">Latency</div>
+                <div style="font-size: 13px; color: var(--text-secondary);" id="speed-sub">~17.5 ms/token</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stacked Allocation Bar -->
+          <div class="allocation-bar-container">
+            <label class="section-subtitle">Memory Allocation Breakdown</label>
+            <div class="stacked-bar">
+              <div class="bar-segment weights" id="seg-weights" style="width: 80%" title="Weights"></div>
+              <div class="bar-segment kv-cache" id="seg-kv" style="width: 5%" title="KV Cache"></div>
+              <div class="bar-segment activations" id="seg-activations" style="width: 5%" title="Activations"></div>
+              <div class="bar-segment overhead" id="seg-overhead" style="width: 10%" title="Overhead"></div>
+            </div>
+            <div class="stacked-legend">
+              <div class="legend-item"><span class="dot weights"></span><span class="legend-txt">Weights</span> <strong id="lbl-weights-gb">0.00 GB</strong></div>
+              <div class="legend-item"><span class="dot kv-cache"></span><span class="legend-txt">KV Cache</span> <strong id="lbl-kv-gb">0.00 GB</strong></div>
+              <div class="legend-item"><span class="dot activations"></span><span class="legend-txt">Activations</span> <strong id="lbl-activations-gb">0.00 GB</strong></div>
+              <div class="legend-item"><span class="dot overhead"></span><span class="legend-txt">Overhead</span> <strong id="lbl-overhead-gb">0.00 GB</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Inference Simulation Panel -->
+    <div class="simulation-panel">
+      <div class="simulation-header">
+        <div class="simulation-title-area">
+          <h2>Inference Simulation</h2>
+          <span id="sim-model-spec" class="sim-spec-text">Loading model configuration...</span>
+          <span id="sim-input-seq" class="sim-seq-text">Input sequence length: --</span>
+        </div>
+        <div class="simulation-buttons">
+          <button id="sim-play-btn" class="control-btn" title="Start Simulation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="simulation-terminal"><span id="sim-terminal-text" class="terminal-text placeholder">Click play to simulate token generation...</span><span class="terminal-cursor" id="sim-terminal-cursor"></span></div>
+    </div>
+
+  </div>
+
+  <!-- ── SEO Guide ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>Understanding Large Language Model VRAM Calculations</h2>
+      
+      <p>Running Large Language Models (LLMs) locally requires a solid understanding of Video RAM (VRAM) budgets. An Out-Of-Memory (OOM) error occurs if a model's operational requirements exceed the physical capacity of your GPU's memory. This calculator breaks down the four distinct components that consume VRAM: model weights, the key-value (KV) cache, activation tensors, and CUDA framework overhead.</p>
+
+      <h3>1. Model Weights (Static Memory)</h3>
+      <p>This is the baseline memory required simply to load the model onto the GPU. It is determined solely by the number of parameters and the quantization level (bit precision) of those weights:</p>
+      <ul>
+        <li><strong>FP16 / BF16 (16-bit):</strong> Standard precision. Consumes 2 bytes per parameter (e.g., an 8 Billion parameter model requires 16 GB of memory).</li>
+        <li><strong>INT8 (8-bit):</strong> Consumes 1 byte per parameter (e.g., 8 GB for an 8B model).</li>
+        <li><strong>INT4 / Q4 (4-bit):</strong> Consumes approximately 0.5 to 0.6 bytes per parameter (e.g., ~4.8 GB for an 8B model using Q4_K_M GGUF format).</li>
+      </ul>
+
+      <h3>2. Key-Value Cache (Dynamic Memory)</h3>
+      <p>The KV Cache stores the key and value vectors of previous tokens in the context window during decoding. It grows linearly with <strong>Batch Size</strong> and <strong>Context Length</strong>. Modern architectures handle this differently:</p>
+      <ul>
+        <li><strong>Grouped Query Attention (GQA):</strong> Memory-efficient. Groups multiple query heads to share a single key-value head, compressing the KV cache size by up to 8x.</li>
+        <li><strong>Hybrid Architecture (e.g. Qwen 3.5 9B):</strong> Models may use a mix of Linear Attention (which has a fixed-size state) and standard Attention, drastically reducing KV Cache size.</li>
+        <li><strong>State-Space Models (SSM / Mamba):</strong> These models do not use a standard KV cache that grows with context length. They use a fixed recurrent state memory footprint, allowing for near-infinite context windows without OOM errors.</li>
+      </ul>
+
+      <h3>3. Activations, Overhead, & Mixture of Experts (MoE)</h3>
+      <p><strong>Activations</strong> are intermediate tensors generated during the forward pass. <strong>Overhead</strong> is the base allocation claimed by CUDA/PyTorch.</p>
+      <p>For <strong>Mixture of Experts (MoE)</strong> models like Mixtral or Gemma MoE, the <em>Total Parameters</em> dictate the massive VRAM needed to store the model weights, but only the <em>Active Parameters</em> are used during computation. This results in incredibly fast generation speeds (Tokens/Sec) relative to the model's total size!</p>
+    </article>
+  </div>
+
+</Layout>
+
+<script data-astro-rerun define:vars={{ MODELS, GPUS, QUANTIZATIONS }}>
+  // Interactive Javascript calculations
+  (() => {
+    // DOM selectors
+    const modelSelect = document.getElementById('model-preset');
+    const customSpecsGroup = document.getElementById('custom-specs-group');
+    const weightQuantSelect = document.getElementById('weight-quant');
+    const kvQuantSelect = document.getElementById('kv-quant');
+    
+    const contextLengthInput = document.getElementById('context-length');
+    const contextValText = document.getElementById('context-val');
+
+
+    
+    const gpuPresetSelect = document.getElementById('gpu-preset');
+    const customGpuGroup = document.getElementById('custom-gpu-group');
+    const gpuCountInput = document.getElementById('gpu-count');
+    const gpuInterconnectGroup = document.getElementById('interconnect-group');
+    const gpuInterconnectSelect = document.getElementById('gpu-interconnect');
+
+    
+    const totalVramText = document.getElementById('total-vram-text');
+    const totalLimitText = document.getElementById('total-limit-text');
+    const gaugeStatus = document.getElementById('gauge-status');
+    const gaugeBarFill = document.getElementById('gauge-bar-fill');
+    
+    const segWeights = document.getElementById('seg-weights');
+    const segKv = document.getElementById('seg-kv');
+    const segActivations = document.getElementById('seg-activations');
+    const segOverhead = document.getElementById('seg-overhead');
+    
+    const lblWeightsGb = document.getElementById('lbl-weights-gb');
+    const lblKvGb = document.getElementById('lbl-kv-gb');
+    const lblActivationsGb = document.getElementById('lbl-activations-gb');
+    const lblOverheadGb = document.getElementById('lbl-overhead-gb');
+    
+    const speedValueText = document.getElementById('speed-value');
+    const speedSubText = document.getElementById('speed-sub');
+
+    // ── Searchable Combobox Factory ──
+    function setupSearchableCombobox(prefix, hiddenInputId) {
+      const selectContainer = document.getElementById(prefix + '-container');
+      const selectSearch = document.getElementById(prefix + '-search');
+      const selectArrow = document.getElementById(prefix + '-arrow');
+      const selectDropdown = document.getElementById(prefix + '-dropdown');
+      const selectOptionsList = document.getElementById(prefix + '-options');
+      const hiddenInput = document.getElementById(hiddenInputId);
+      
+      if (!selectContainer) return; // safety check
+
+      const selectOptions = selectOptionsList.querySelectorAll('.custom-select-option');
+      let lastSelectedValue = hiddenInput.value;
+      let lastSelectedText = '';
+
+      // Initialize display name
+      const initialOption = Array.from(selectOptions).find(opt => opt.getAttribute('data-value') === lastSelectedValue);
+      if (initialOption) {
+        lastSelectedText = initialOption.textContent;
+        selectSearch.value = lastSelectedText;
+        initialOption.classList.add('selected');
+      }
+
+      function openDropdown() {
+        selectContainer.classList.add('open');
+        selectSearch.setAttribute('aria-expanded', 'true');
+        selectDropdown.style.display = 'flex';
+        selectSearch.value = ''; // clear input for fresh search
+        filterOptions('');
+      }
+
+      function closeDropdown() {
+        selectContainer.classList.remove('open');
+        selectSearch.setAttribute('aria-expanded', 'false');
+        selectDropdown.style.display = 'none';
+        selectSearch.value = lastSelectedText; // restore selected text
+        selectSearch.blur();
+      }
+
+      // Toggle on click of arrow or input (when closed)
+      selectArrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selectContainer.classList.contains('open')) {
+          closeDropdown();
+        } else {
+          openDropdown();
+          selectSearch.focus();
+        }
+      });
+
+      selectSearch.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!selectContainer.classList.contains('open')) {
+          openDropdown();
+        }
+      });
+
+      selectSearch.addEventListener('focus', () => {
+        if (!selectContainer.classList.contains('open')) {
+          openDropdown();
+        }
+      });
+
+      selectSearch.addEventListener('input', (e) => {
+        if (!selectContainer.classList.contains('open')) {
+          selectContainer.classList.add('open');
+          selectDropdown.style.display = 'flex';
+        }
+        filterOptions(e.target.value);
+      });
+
+      function filterOptions(query) {
+        const filter = query.toLowerCase().trim();
+        let matches = 0;
+
+        const existingNoResults = selectOptionsList.querySelector('.custom-select-no-results');
+        if (existingNoResults) existingNoResults.remove();
+
+        selectOptions.forEach(opt => {
+          const text = opt.textContent.toLowerCase();
+          if (text.includes(filter)) {
+            opt.style.display = 'block';
+            matches++;
+          } else {
+            opt.style.display = 'none';
+          }
+        });
+
+        if (matches === 0) {
+          const noResults = document.createElement('div');
+          noResults.className = 'custom-select-no-results';
+          noResults.textContent = 'No options found';
+          selectOptionsList.appendChild(noResults);
+        }
+      }
+
+      // Option click selection
+      selectOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const value = opt.getAttribute('data-value');
+          hiddenInput.value = value;
+          
+          lastSelectedValue = value;
+          lastSelectedText = opt.textContent;
+          selectSearch.value = lastSelectedText;
+
+          selectOptions.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+
+          closeDropdown();
+
+          // Dispatch change event to trigger architectural panel visibility and recalculations
+          hiddenInput.dispatchEvent(new Event('change'));
+        });
+      });
+
+      // Close on click outside
+      document.addEventListener('click', (e) => {
+        if (!selectContainer.contains(e.target)) {
+          if (selectContainer.classList.contains('open')) {
+            closeDropdown();
+          }
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && selectContainer.classList.contains('open')) {
+          closeDropdown();
+        }
+      });
+    }
+
+    // Initialize all custom comboboxes
+    setupSearchableCombobox('model-select', 'model-preset');
+    setupSearchableCombobox('weight-quant', 'weight-quant');
+    setupSearchableCombobox('kv-quant', 'kv-quant');
+    setupSearchableCombobox('gpu-preset', 'gpu-preset');
+    setupSearchableCombobox('gpu-interconnect', 'gpu-interconnect');
+
+    modelSelect.addEventListener('change', () => {
+      if (modelSelect.value === 'custom') {
+        customSpecsGroup.style.display = 'block';
+      } else {
+        customSpecsGroup.style.display = 'none';
+      }
+      applyContextHardLimit();
+      calculate();
+    });
+
+    gpuPresetSelect.addEventListener('change', () => {
+      if (gpuPresetSelect.value === 'custom') {
+        customGpuGroup.style.display = 'block';
+      } else {
+        customGpuGroup.style.display = 'none';
+      }
+      calculate();
+    });
+
+    // Custom Spec inputs events
+    ['custom-params', 'custom-active-params', 'custom-layers', 'custom-hidden', 'custom-heads', 'custom-kv-heads', 'custom-has-kv'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculate);
+    });
+
+    // Custom GPU inputs events
+    ['custom-gpu-vram', 'custom-gpu-bandwidth', 'custom-gpu-tflops', 'custom-gpu-tdp'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculate);
+    });
+
+    weightQuantSelect.addEventListener('change', calculate);
+    kvQuantSelect.addEventListener('change', calculate);
+    gpuPresetSelect.addEventListener('change', calculate);
+    gpuCountInput.addEventListener('input', () => {
+      const gCount = parseInt(gpuCountInput.value) || 1;
+      if (gCount > 1) {
+        gpuInterconnectGroup.style.display = 'block';
+      } else {
+        gpuInterconnectGroup.style.display = 'none';
+      }
+      calculate();
+    });
+    gpuInterconnectSelect.addEventListener('change', calculate);
+
+
+    function applyContextHardLimit() {
+      const preset = MODELS.find(m => m.id === modelSelect.value);
+      const maxCtx = preset && preset.maxContext ? preset.maxContext : 262144; // Default max if unspecified or custom
+      
+      contextLengthInput.max = maxCtx;
+      
+      // If current slider value exceeds the new max, clamp it
+      let val = parseInt(contextLengthInput.value);
+      if (val > maxCtx) {
+        val = maxCtx;
+        contextLengthInput.value = val;
+        contextValText.innerText = val.toLocaleString() + ' tokens';
+      }
+    }
+
+    contextLengthInput.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      contextValText.innerText = val.toLocaleString() + ' tokens';
+      calculate();
+    });
+
+
+
+    // 2. VRAM Calculation Logic
+    function calculate() {
+      // Get model properties
+      let paramsB = 8.0;
+      let activeParamsB = undefined;
+      let layers = 32;
+      let attentionLayers = undefined;
+      let hasKVCache = true;
+      let hiddenSize = 4096;
+      let heads = 32;
+      let kvHeads = 8;
+      
+      // High-Precision Properties
+      let vocabSize = 32000;
+      let embeddingsTied = true;
+      let headDim = undefined;
+      let globalHeadDim = undefined;
+      let globalKVHeads = undefined;
+      let localLayersCount = undefined;
+      let globalLayersCount = undefined;
+      let slidingWindowSize = undefined;
+
+      if (modelSelect.value === 'custom') {
+        paramsB = parseFloat(document.getElementById('custom-params').value) || 8.0;
+        const rawActive = document.getElementById('custom-active-params').value;
+        if (rawActive && !isNaN(parseFloat(rawActive))) activeParamsB = parseFloat(rawActive);
+        
+        layers = parseInt(document.getElementById('custom-layers').value) || 32;
+        hasKVCache = document.getElementById('custom-has-kv').checked;
+        hiddenSize = parseInt(document.getElementById('custom-hidden').value) || 4096;
+        heads = parseInt(document.getElementById('custom-heads').value) || 32;
+        kvHeads = parseInt(document.getElementById('custom-kv-heads').value) || 8;
+        
+        // Custom models fall back to approximations unless advanced UI fields are added later
+        headDim = hiddenSize / heads;
+      } else {
+        const preset = MODELS.find(m => m.id === modelSelect.value);
+        if (preset) {
+          paramsB = preset.paramsBillion;
+          activeParamsB = preset.activeParamsBillion;
+          layers = preset.layers;
+          attentionLayers = preset.attentionLayers;
+          hasKVCache = preset.hasKVCache !== false;
+          hiddenSize = preset.hiddenSize;
+          heads = preset.attentionHeads;
+          kvHeads = preset.kvHeads;
+          
+          vocabSize = preset.vocabSize || 32000;
+          embeddingsTied = preset.embeddingsTied !== false;
+          headDim = preset.headDim || (hiddenSize / heads);
+          globalHeadDim = preset.globalHeadDim;
+          globalKVHeads = preset.globalKVHeads;
+          localLayersCount = preset.localLayersCount;
+          globalLayersCount = preset.globalLayersCount;
+          slidingWindowSize = preset.slidingWindowSize;
+        }
+      }
+
+      // Read interactive parameter specs
+      const contextLen = parseInt(contextLengthInput.value);
+      const batchSize = 1;
+      const activeGpuId = gpuPresetSelect.value;
+      let activeGpu = { id: 'custom', name: 'Custom GPU', vramGB: 24, bandwidthGBs: 1000, tflopsFP16: 330, tdpWatts: 350 };
+      if (activeGpuId === 'custom') {
+        activeGpu.vramGB = parseFloat(document.getElementById('custom-gpu-vram').value) || 24;
+        activeGpu.bandwidthGBs = parseFloat(document.getElementById('custom-gpu-bandwidth').value) || 1000;
+        activeGpu.tflopsFP16 = parseFloat(document.getElementById('custom-gpu-tflops').value) || 330;
+        activeGpu.tdpWatts = parseFloat(document.getElementById('custom-gpu-tdp').value) || 350;
+      } else {
+        activeGpu = GPUS.find(g => g.id === activeGpuId) || GPUS[0];
+      }
+      const gpuCount = parseInt(gpuCountInput.value) || 1;
+      const totalGpuVram = activeGpu.vramGB * gpuCount;
+
+      let weightsGB = 0;
+      let kvCacheGB = 0;
+      let activationsGB = 0;
+      let overheadGB = 0;
+
+      // Model weights size
+      const quant = QUANTIZATIONS.find(q => q.id === weightQuantSelect.value) || { bytesPerParam: 2.0 };
+      // Accurate GiB calculation (10^9 / 1024^3 = 1.073741824)
+      weightsGB = (paramsB * quant.bytesPerParam) / 1.073741824;
+
+      // KV Cache size
+      const kvQuant = QUANTIZATIONS.find(q => q.id === kvQuantSelect.value) || { bytesPerParam: 2.0 };
+      const kvBytes = kvQuant.bytesPerParam;
+
+      if (hasKVCache) {
+        const actualLayers = attentionLayers || layers;
+        
+        if (localLayersCount !== undefined && globalLayersCount !== undefined && slidingWindowSize !== undefined) {
+           // Hybrid attention (like Gemma 2/4)
+           const localContextLen = Math.min(contextLen, slidingWindowSize);
+           const localKV = 2 * batchSize * localContextLen * localLayersCount * kvHeads * headDim * kvBytes;
+           const effectiveGlobalKVHeads = globalKVHeads !== undefined ? globalKVHeads : kvHeads;
+           const globalKV = 2 * batchSize * contextLen * globalLayersCount * effectiveGlobalKVHeads * (globalHeadDim || headDim) * kvBytes;
+           // Divide by 1024^3 for GiB
+           kvCacheGB = (localKV + globalKV) / (1024 * 1024 * 1024);
+        } else {
+           // Standard attention
+           const effectiveHeadDim = headDim || (hiddenSize / heads);
+           const totalKVBytes = 2 * batchSize * contextLen * actualLayers * kvHeads * effectiveHeadDim * kvBytes;
+           // Divide by 1024^3 for GiB
+           kvCacheGB = totalKVBytes / (1024 * 1024 * 1024);
+        }
+      } else {
+        kvCacheGB = 0; // State-space models
+      }
+
+      // Activations size
+      // dynamic activations formula for inference, capped at 20% weights size
+      const effectiveParamsForActivations = activeParamsB || paramsB;
+      activationsGB = (batchSize * contextLen * hiddenSize * layers * 12) / 1e9;
+      // scale activations if it's MoE
+      if (activeParamsB) {
+        activationsGB = activationsGB * (activeParamsB / paramsB);
+      }
+      const cap = ((effectiveParamsForActivations * quant.bytesPerParam) / 1.024) * 0.20;
+      if (activationsGB > cap) activationsGB = cap;
+
+      // CUDA & Engine Overhead
+      const overheadBase = 1.5;
+      const overheadPct = 0.05;
+      overheadGB = overheadBase + (weightsGB * overheadPct);
+
+      // Summation
+      const totalVramGB = weightsGB + kvCacheGB + activationsGB + overheadGB;
+      const utilizationPct = (totalVramGB / totalGpuVram) * 100;
+
+      // 3. Update VRAM Gauges
+      totalVramText.innerText = totalVramGB.toFixed(2) + ' GB';
+      totalLimitText.innerText = `of ${totalGpuVram.toFixed(2)} GB`;
+      
+      gaugeBarFill.style.width = Math.min(utilizationPct, 100).toFixed(1) + '%';
+      
+      if (utilizationPct <= 80) {
+        gaugeStatus.innerText = 'COMPATIBLE';
+        gaugeStatus.className = 'gauge-status-badge compatible';
+        gaugeBarFill.style.backgroundColor = 'var(--color-success)';
+      } else if (utilizationPct <= 100) {
+        gaugeStatus.innerText = 'WARNING';
+        gaugeStatus.className = 'gauge-status-badge warning';
+        gaugeBarFill.style.backgroundColor = 'var(--color-warning)';
+      } else {
+        gaugeStatus.innerText = 'OUT OF MEMORY';
+        gaugeStatus.className = 'gauge-status-badge oom';
+        gaugeBarFill.style.backgroundColor = 'var(--color-error)';
+      }
+
+      // 4. Update Stacked Bar Chart & Legends
+      const totalBreakdown = Math.max(totalVramGB, 0.1);
+      const wPct = (weightsGB / totalBreakdown) * 100;
+      const kPct = (kvCacheGB / totalBreakdown) * 100;
+      const aPct = (activationsGB / totalBreakdown) * 100;
+      const oPct = (overheadGB / totalBreakdown) * 100;
+
+      segWeights.style.width = wPct.toFixed(1) + '%';
+      segKv.style.width = kPct.toFixed(1) + '%';
+      segActivations.style.width = aPct.toFixed(1) + '%';
+      segOverhead.style.width = oPct.toFixed(1) + '%';
+
+      lblWeightsGb.innerText = weightsGB.toFixed(2) + ' GB';
+      lblKvGb.innerText = kvCacheGB.toFixed(2) + ' GB';
+      lblActivationsGb.innerText = activationsGB.toFixed(2) + ' GB';
+      lblOverheadGb.innerText = overheadGB.toFixed(2) + ' GB';
+
+      // 5. Performance Speed calculations
+      let interconnectScale = 1.0;
+      if (gpuCount > 1) {
+        interconnectScale = parseFloat(gpuInterconnectSelect.value) || 0.85;
+      }
+      const effectiveBandwidth = activeGpu.bandwidthGBs * gpuCount * interconnectScale;
+      let tokSec = 0;
+      
+      if (totalVramGB <= totalGpuVram) {
+        // Fits fully in GPU bandwidth
+        tokSec = effectiveBandwidth / weightsGB;
+      }
+
+      if (tokSec > 0) {
+        // MoE models use active params for generation speed
+        const activeParamsUsed = activeParamsB || paramsB;
+        const speedMultiplier = paramsB / activeParamsUsed;
+        tokSec = tokSec * speedMultiplier;
+
+        speedValueText.innerText = `~${Math.round(tokSec)} t/s`;
+        speedSubText.innerText = `~${(1000 / tokSec).toFixed(1)} ms/token`;
+      } else {
+        speedValueText.innerText = 'OOM';
+        speedSubText.innerText = 'Exceeds memory';
+      }
+
+      // Update simulation metadata
+      updateSimulationMeta();
+    }
+
+    // ── Inference Simulator Logic ──
+    const RICK_ASTLEY_LYRICS = `We're no strangers to love
+You know the rules and so do I
+A full commitment's what I'm thinking of
+You wouldn't get this from any other guy
+
+I just wanna tell you how I'm feeling
+Gotta make you understand
+
+Never gonna give you up
+Never gonna let you down
+Never gonna run around and desert you
+Never gonna make you cry
+Never gonna say goodbye
+Never gonna tell a lie and hurt you
+
+We've known each other for so long
+Your heart's been aching, but you're too shy to say it
+Inside, we both know what's been going on
+We know the game and we're gonna play it
+
+And if you ask me how I'm feeling
+Don't tell me you're too blind to see
+
+Never gonna give you up
+Never gonna let you down
+Never gonna run around and desert you
+Never gonna make you cry
+Never gonna say goodbye
+Never gonna tell a lie and hurt you
+
+Never gonna give you up
+Never gonna let you down
+Never gonna run around and desert you
+Never gonna make you cry
+Never gonna say goodbye
+Never gonna tell a lie and hurt you
+
+(Ooh, give you up)
+(Ooh, give you up)
+(Ooh)
+Never gonna give, never gonna give (give you up)
+(Ooh)
+Never gonna give, never gonna give (give you up)
+
+We've known each other for so long
+Your heart's been aching, but you're too shy to say it
+Inside, we both know what's been going on
+We know the game and we're gonna play it
+
+I just wanna tell you how I'm feeling
+Gotta make you understand
+
+Never gonna give you up
+Never gonna let you down
+Never gonna run around and desert you
+Never gonna make you cry
+Never gonna say goodbye
+Never gonna tell a lie and hurt you`;
+
+    const tokens = RICK_ASTLEY_LYRICS.match(/(\S+|\n+)/g) || [];
+
+    const simPlayBtn = document.getElementById('sim-play-btn');
+    const simTerminalText = document.getElementById('sim-terminal-text');
+    const simModelSpec = document.getElementById('sim-model-spec');
+    const simInputSeq = document.getElementById('sim-input-seq');
+
+    let isPlaying = false;
+    let currentTokenIndex = 0;
+    let accumulatedTokens = 0;
+    let ttftTimeout = null;
+    let generationInterval = null;
+
+    function updatePlayButtonUI() {
+      if (!simPlayBtn) return;
+      if (isPlaying) {
+        simPlayBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-pause"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+        simPlayBtn.title = "Pause Simulation";
+      } else if (currentTokenIndex >= tokens.length) {
+        simPlayBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rotate-ccw"><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>`;
+        simPlayBtn.title = "Restart Simulation";
+      } else {
+        simPlayBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+        simPlayBtn.title = currentTokenIndex > 0 ? "Resume Simulation" : "Start Simulation";
+      }
+    }
+
+    function updateSimulationMeta() {
+      if (!simModelSpec) return;
+      
+      const speedText = speedValueText.innerText;
+      const isOOM = speedText.includes('OOM');
+      
+      const modelSelectSearch = document.getElementById('model-select-search');
+      const gpuPresetSearch = document.getElementById('gpu-preset-search');
+      const gpuCount = gpuCountInput.value;
+      const weightQuantSearch = document.getElementById('weight-quant-search');
+      const kvQuantSearch = document.getElementById('kv-quant-search');
+      
+      let modelName = modelSelectSearch ? modelSelectSearch.value : '';
+      let gpuName = gpuPresetSearch ? gpuPresetSearch.value : '';
+      let weightQuant = weightQuantSearch ? weightQuantSearch.value.split(' (')[0] : '';
+      let kvQuant = kvQuantSearch ? kvQuantSearch.value.split(' (')[0] : '';
+      
+      const selectedModelId = modelSelect.value;
+      let attentionType = 'MHA';
+      if (selectedModelId !== 'custom') {
+        const model = MODELS.find(m => m.id === selectedModelId);
+        if (model) {
+          attentionType = model.attentionHeads !== model.kvHeads ? 'GQA' : 'MHA';
+        }
+      } else {
+        const heads = parseInt(document.getElementById('custom-heads').value) || 32;
+        const kvHeads = parseInt(document.getElementById('custom-kv-heads').value) || 8;
+        attentionType = heads !== kvHeads ? 'GQA' : 'MHA';
+      }
+      
+      if (isOOM) {
+        simModelSpec.textContent = `${modelName} on ${gpuCount}x ${gpuName} (OOM)`;
+        simPlayBtn.disabled = true;
+        simPlayBtn.title = "Simulation disabled (OOM)";
+        pauseGeneration();
+      } else {
+        simModelSpec.textContent = `${modelName} (${weightQuant} / ${kvQuant} / ${attentionType}) on ${gpuCount}x ${gpuName}`;
+        simPlayBtn.disabled = false;
+        updatePlayButtonUI();
+      }
+      
+      const contextLength = contextLengthInput.value;
+      simInputSeq.textContent = `Input sequence length: ${parseInt(contextLength).toLocaleString()} tokens`;
+    }
+
+    function startGeneration() {
+      isPlaying = true;
+      updatePlayButtonUI();
+      
+      const speedText = speedValueText.innerText;
+      let tokenSpeed = 30; // default fallback
+      const match = speedText.match(/~(\d+)\s+t\/s/);
+      if (match) {
+        tokenSpeed = parseInt(match[1], 10);
+      }
+      
+      if (simTerminalText.classList.contains('placeholder')) {
+        simTerminalText.classList.remove('placeholder');
+        simTerminalText.textContent = '';
+      }
+      
+      if (currentTokenIndex === 0) {
+        runStreamLoop(tokenSpeed);
+      } else {
+        runStreamLoop(tokenSpeed);
+      }
+    }
+
+    function runStreamLoop(tokenSpeed) {
+      const tokensPerMs = tokenSpeed / 1000;
+      let lastTime = performance.now();
+      
+      function tick(now) {
+        if (!isPlaying) return;
+        
+        const delta = now - lastTime;
+        lastTime = now;
+        
+        const tokensEmitted = delta * tokensPerMs;
+        accumulatedTokens += tokensEmitted;
+        
+        // 1 word/newline in tokens array represents ~1.33 tokens
+        const tokensPerWord = 1.33;
+        let wordsToEmit = Math.floor(accumulatedTokens / tokensPerWord);
+        
+        if (wordsToEmit > 0) {
+          accumulatedTokens -= wordsToEmit * tokensPerWord;
+          let textContent = simTerminalText.textContent;
+          if (!textContent.trim() || textContent === 'Prefill phase...') {
+            textContent = '';
+          }
+          
+          for (let i = 0; i < wordsToEmit; i++) {
+            if (currentTokenIndex >= tokens.length) {
+              isPlaying = false;
+              updatePlayButtonUI();
+              break;
+            }
+            
+            const token = tokens[currentTokenIndex];
+            if (token === '\n') {
+              textContent += '\n';
+            } else {
+              if (textContent.length > 0 && textContent[textContent.length - 1] !== '\n') {
+                textContent += ' ';
+              }
+              textContent += token;
+            }
+            currentTokenIndex++;
+          }
+          
+          simTerminalText.textContent = textContent;
+          simTerminalText.parentElement.scrollTop = simTerminalText.parentElement.scrollHeight;
+        }
+        
+        if (currentTokenIndex < tokens.length && isPlaying) {
+          generationInterval = requestAnimationFrame(tick);
+        }
+      }
+      
+      generationInterval = requestAnimationFrame(tick);
+    }
+
+    function pauseGeneration() {
+      isPlaying = false;
+      updatePlayButtonUI();
+      if (ttftTimeout) {
+        clearTimeout(ttftTimeout);
+        ttftTimeout = null;
+      }
+      if (generationInterval) {
+        cancelAnimationFrame(generationInterval);
+        generationInterval = null;
+      }
+    }
+
+    function resetGeneration() {
+      pauseGeneration();
+      currentTokenIndex = 0;
+      accumulatedTokens = 0;
+      if (simTerminalText) {
+        simTerminalText.textContent = 'Click play to simulate token generation...';
+        simTerminalText.classList.add('placeholder');
+        simTerminalText.classList.remove('prefill');
+      }
+    }
+
+    if (simPlayBtn) {
+      simPlayBtn.addEventListener('click', () => {
+        if (isPlaying) {
+          pauseGeneration();
+        } else if (currentTokenIndex >= tokens.length) {
+          resetGeneration();
+          startGeneration();
+        } else {
+          startGeneration();
+        }
+      });
+    }
+
+    // Run first calculate on page render
+    calculate();
+  })();
+</script>
+
+<style>
+  .tooltip-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .tooltip-icon {
+    width: 14px;
+    height: 14px;
+    color: #94a3b8;
+    cursor: help;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+  }
+  .tooltip-wrapper:hover .tooltip-icon {
+    color: var(--color-primary);
+  }
+  .tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    width: 250px;
+    background-color: #1e293b;
+    color: #f8fafc;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px 12px;
+    position: absolute;
+    z-index: 10;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    font-size: 0.85rem;
+    font-weight: 400;
+    line-height: 1.4;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #334155;
+  }
+  .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #334155 transparent transparent transparent;
+  }
+  .tooltip-wrapper:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Page Layout & Typography (from tool-template.md) ── */
+  .tool-hero {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 64px 24px 56px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 14px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .workspace {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px; /* Spacious gaps between sections */
+  }
+
+  /* ── Input Panel ── */
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .editor-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.01);
+  }
+
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F8F9FA;
+    border-bottom: 1px solid var(--color-border);
+    padding: 12px 18px;
+    min-height: 48px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .panel-bar.rounded-top {
+    border-radius: var(--rounded-lg) var(--rounded-lg) 0 0;
+  }
+
+  .panel-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel-bar h2 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+    margin: 0;
+  }
+
+  .input-section {
+    padding: 28px; /* Extra breathing room */
+    display: flex;
+    flex-direction: column;
+    gap: 24px;     /* Distinct field gaps */
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Combobox styles are now in global.css as a design-system standard */
+
+  .section-divider {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 8px 0;
+  }
+
+  /* Custom overrides grid */
+  .custom-specs {
+    background: var(--color-neutral);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--rounded-md);
+    padding: 18px;
+    margin-top: -8px;
+  }
+
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .specs-grid .field-group {
+    justify-content: flex-end;
+  }
+
+  /* Sliders styling */
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .slider-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-tertiary);
+  }
+
+  .slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(28, 43, 51, 0.08);
+    outline: none;
+    margin: 10px 0;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-tertiary);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  /* Checkboxes */
+  .checkbox-group {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(8, 102, 255, 0.02);
+    border: 1px solid rgba(8, 102, 255, 0.08);
+    border-radius: var(--rounded-md);
+  }
+
+  .checkbox-group input {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .checkbox-label {
+    text-transform: none;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .caption {
+    font-size: 0.72rem;
+    color: var(--color-secondary);
+    line-height: 1.45;
+    margin: 4px 0 0;
+  }
+
+  /* ── VRAM Budget Panel (Right) ── */
+  .results-content {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .vram-gauge-card {
+    background: rgba(28, 43, 51, 0.02);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .gauge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .gauge-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-secondary);
+  }
+
+  .gauge-status-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+  }
+
+  .gauge-status-badge.compatible {
+    background: rgba(29, 164, 98, 0.08);
+    color: var(--color-success);
+    border: 1px solid rgba(29, 164, 98, 0.18);
+  }
+
+  .gauge-status-badge.warning {
+    background: rgba(245, 166, 35, 0.08);
+    color: var(--color-warning);
+    border: 1px solid rgba(245, 166, 35, 0.18);
+  }
+
+  .gauge-status-badge.oom {
+    background: rgba(228, 23, 73, 0.08);
+    color: var(--color-error);
+    border: 1px solid rgba(228, 23, 73, 0.18);
+  }
+
+  .gauge-display {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .gauge-number {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    line-height: 1;
+  }
+
+  .gauge-limit {
+    font-size: 0.95rem;
+    color: var(--color-secondary);
+    font-weight: 500;
+  }
+
+  .gauge-bar-outer {
+    height: 10px;
+    background: rgba(28, 43, 51, 0.08);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .gauge-bar-inner {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  /* Memory Allocation Breakdown */
+  .allocation-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-subtitle {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-secondary);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .stacked-bar {
+    display: flex;
+    height: 20px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(28, 43, 51, 0.05);
+  }
+
+  .bar-segment {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  .bar-segment.weights { background-color: #0866FF; }
+  .bar-segment.kv-cache { background-color: #1DA462; }
+  .bar-segment.activations { background-color: #F5A623; }
+  .bar-segment.overhead { background-color: #8E9AA8; }
+
+  .stacked-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(28, 43, 51, 0.02);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-md);
+    padding: 12px 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.82rem;
+    color: var(--color-primary);
+  }
+
+  .legend-txt {
+    color: var(--color-secondary);
+    margin-left: 8px;
+    flex-grow: 1;
+  }
+
+  .legend-item strong {
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .dot.weights { background-color: #0866FF; }
+  .dot.kv-cache { background-color: #1DA462; }
+  .dot.activations { background-color: #F5A623; }
+  .dot.overhead { background-color: #8E9AA8; }
+
+
+
+  /* Segmented control adjustments */
+  .segmented-control {
+    background: rgba(28, 43, 51, 0.06);
+    border-radius: 6px;
+    padding: 3px;
+  }
+
+  .segment-btn {
+    border-radius: 4px;
+    font-size: 0.76rem;
+    padding: 5px 14px;
+  }
+
+  /* ── Inference Simulation Panel ── */
+  .simulation-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    padding: 24px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.01);
+  }
+  .simulation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 16px;
+  }
+  .simulation-title-area h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-primary, #0f172a);
+    margin: 0 0 6px 0;
+  }
+  .sim-spec-text {
+    font-size: 0.88rem;
+    color: #64748b;
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+  .sim-seq-text {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .ttft-sim-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+  }
+  .ttft-sim-label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    background-color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s ease;
+    margin: 0;
+  }
+  .ttft-sim-label input[type="checkbox"]:checked {
+    background-color: var(--color-primary, #1c2b33);
+    border-color: var(--color-primary, #1c2b33);
+  }
+  .ttft-sim-label input[type="checkbox"]:checked::after {
+    content: "";
+    display: block;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-0.5px, -1px);
+    position: absolute;
+  }
+  .ttft-sim-label input[type="checkbox"]:focus-visible {
+    box-shadow: 0 0 0 2px rgba(28, 43, 51, 0.2);
+  }
+  .simulation-buttons {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .control-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .control-btn:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+  .control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .simulation-terminal {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 180px;
+    max-height: 320px;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #334155;
+    position: relative;
+    white-space: pre-wrap;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .terminal-text.placeholder {
+    color: #94a3b8;
+    font-style: italic;
+  }
+  .terminal-text.prefill {
+    color: #94a3b8;
+    font-style: italic;
+  }
+  .terminal-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background-color: var(--color-primary, #1c2b33);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s infinite steps(2, start);
+  }
+  @keyframes blink {
+    to { visibility: hidden; }
+  }
+
+  /* Responsive layout breakpoints */
+  @media (max-width: 900px) {
+    .editor-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
