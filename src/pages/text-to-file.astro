@@ -1,0 +1,1578 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="Text to File Converter - Download Text as PDF, DOCX, MD, JSON, CSV | AsapGuide" 
+  description="Convert and download raw text into multiple file formats like TXT, Markdown, PDF, DOCX, HTML, JSON, CSV, and RTF. Instant format detection, client-side validation, and offline security."
+>
+
+  <!-- ── Full-width Hero ── -->
+  <div class="tool-hero">
+    <p class="eyebrow">Utilities</p>
+    <h1 class="tool-title">Text to <em class="accent">File Converter</em></h1>
+    <p class="tool-desc">Convert and download any text block into multiple formats with live validation and structure checking.</p>
+  </div>
+
+  <!-- ── Main Workspace ── -->
+  <div class="workspace">
+
+    <!-- Editor Grid -->
+    <div class="editor-grid">
+
+      <!-- Panel 1: Input -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <h2>Input Text</h2>
+          </div>
+          <div class="panel-bar-right">
+          </div>
+        </div>
+
+        <div class="input-container" id="input-container">
+          <!-- Input Sub-toolbar -->
+          <div class="editor-toolbar">
+            <span class="toolbar-label">Raw Text Input</span>
+            <div class="toolbar-actions">
+              <button id="btn-sample-txt" class="btn-toolbar" data-type="text">Sample Text</button>
+              <button id="btn-sample-json" class="btn-toolbar" data-type="json">Sample JSON</button>
+              <button id="btn-sample-md" class="btn-toolbar" data-type="md">Sample MD</button>
+              <button id="btn-clear" class="btn-toolbar">Clear</button>
+            </div>
+          </div>
+          
+          <textarea
+            id="text-input"
+            placeholder="Type, paste, or drag-and-drop your text or code here..."
+            spellcheck="false"
+          ></textarea>
+          <div class="input-footer">
+            <span class="footer-stats" id="input-stats">0 chars | 0 words | 0 lines</span>
+            <span class="footer-status" id="input-status">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Options & Download Configuration -->
+      <div class="editor-panel">
+        <div class="panel-bar">
+          <div class="panel-bar-left">
+            <h2>Download Settings</h2>
+          </div>
+          <div class="panel-bar-right">
+            <button id="btn-download" class="btn-primary" disabled>Download File</button>
+          </div>
+        </div>
+
+        <div class="config-container">
+          <!-- Setup row -->
+          <div class="settings-grid">
+            <!-- Filename Input -->
+            <div class="form-group">
+              <label for="filename-input">Filename</label>
+              <div class="filename-input-wrapper">
+                <input id="filename-input" type="text" value="document" placeholder="filename" aria-label="Filename without extension" />
+              </div>
+            </div>
+
+            <!-- Format selector -->
+            <div class="form-group">
+              <label for="format-select-search">Target Format</label>
+              <div class="custom-select-container" id="format-select-container">
+                <input type="text" id="format-select-search" class="custom-select-search-input" placeholder="Select format..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                <div class="custom-select-arrow" id="format-select-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="format-select-dropdown" style="display: none;">
+                  <div class="custom-select-options" id="format-select-options" role="listbox">
+                    <div class="custom-select-option" data-value="custom" role="option">Custom Extension...</div>
+                    <div class="custom-select-option" data-value="txt" role="option">Plain Text (.txt)</div>
+                    <div class="custom-select-option" data-value="md" role="option">Markdown (.md)</div>
+                    <div class="custom-select-option" data-value="pdf" role="option">PDF Document (.pdf)</div>
+                    <div class="custom-select-option" data-value="docx" role="option">Word Document (.docx)</div>
+                    <div class="custom-select-option" data-value="html" role="option">HTML Webpage (.html)</div>
+                    <div class="custom-select-option" data-value="json" role="option">JSON Data (.json)</div>
+                    <div class="custom-select-option" data-value="yaml" role="option">YAML Config (.yaml)</div>
+                    <div class="custom-select-option" data-value="xml" role="option">XML Data (.xml)</div>
+                    <div class="custom-select-option" data-value="csv" role="option">CSV Spreadsheet (.csv)</div>
+                    <div class="custom-select-option" data-value="tsv" role="option">TSV Spreadsheet (.tsv)</div>
+                    <div class="custom-select-option" data-value="sql" role="option">SQL Query (.sql)</div>
+                    <div class="custom-select-option" data-value="env" role="option">Env Config (.env)</div>
+                    <div class="custom-select-option" data-value="ini" role="option">INI Config (.ini)</div>
+                    <div class="custom-select-option" data-value="tex" role="option">LaTeX Document (.tex)</div>
+                    <div class="custom-select-option" data-value="rtf" role="option">Rich Text (.rtf)</div>
+                    <div class="custom-select-option" data-value="log" role="option">Log File (.log)</div>
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="select-format" value="txt" />
+            </div>
+          </div>
+
+          <!-- Dynamic Settings Panels -->
+          <div class="dynamic-settings-wrapper">
+            <!-- PDF Settings -->
+            <div id="settings-pdf" class="settings-panel" style="display: none;">
+              <div class="custom-panel-header">
+                <span class="custom-panel-title">PDF Page Setup</span>
+                <span class="custom-panel-subtitle">Adjust the page layout and typography for your PDF document</span>
+              </div>
+              <div class="pdf-options-grid">
+                <div class="form-group-compact">
+                  <label for="pdf-orient-select-search">Orientation</label>
+                  <div class="custom-select-container" id="pdf-orient-select-container">
+                    <input type="text" id="pdf-orient-select-search" class="custom-select-search-input" placeholder="Select orientation..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                    <div class="custom-select-arrow" id="pdf-orient-select-arrow">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="custom-select-dropdown" id="pdf-orient-select-dropdown" style="display: none;">
+                      <div class="custom-select-options" id="pdf-orient-select-options" role="listbox">
+                        <div class="custom-select-option" data-value="portrait" role="option">Portrait</div>
+                        <div class="custom-select-option" data-value="landscape" role="option">Landscape</div>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="select-pdf-orient" value="portrait" />
+                </div>
+                <div class="form-group-compact">
+                  <label for="pdf-font-select-search">Font</label>
+                  <div class="custom-select-container" id="pdf-font-select-container">
+                    <input type="text" id="pdf-font-select-search" class="custom-select-search-input" placeholder="Select font..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                    <div class="custom-select-arrow" id="pdf-font-select-arrow">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="custom-select-dropdown" id="pdf-font-select-dropdown" style="display: none;">
+                      <div class="custom-select-options" id="pdf-font-select-options" role="listbox">
+                        <div class="custom-select-option" data-value="helvetica" role="option">Helvetica (Arial)</div>
+                        <div class="custom-select-option" data-value="times" role="option">Times Roman</div>
+                        <div class="custom-select-option" data-value="courier" role="option">Courier (Monospace)</div>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="select-pdf-font" value="helvetica" />
+                </div>
+                <div class="form-group-compact">
+                  <label for="pdf-margins-select-search">Margins</label>
+                  <div class="custom-select-container" id="pdf-margins-select-container">
+                    <input type="text" id="pdf-margins-select-search" class="custom-select-search-input" placeholder="Select margins..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                    <div class="custom-select-arrow" id="pdf-margins-select-arrow">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="custom-select-dropdown" id="pdf-margins-select-dropdown" style="display: none;">
+                      <div class="custom-select-options" id="pdf-margins-select-options" role="listbox">
+                        <div class="custom-select-option" data-value="normal" role="option">Normal (20mm)</div>
+                        <div class="custom-select-option" data-value="small" role="option">Small (10mm)</div>
+                        <div class="custom-select-option" data-value="large" role="option">Large (30mm)</div>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="select-pdf-margins" value="normal" />
+                </div>
+              </div>
+              <div class="pdf-footer-row">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="chk-pdf-pages" checked />
+                  <span class="checkmark"></span>
+                  Include page numbers
+                </label>
+                <p class="info-msg">Note: Large text compiles into multiple pages dynamically.</p>
+              </div>
+            </div>
+
+            <!-- Word Document Settings -->
+            <div id="settings-docx" class="settings-panel" style="display: none;">
+              <div class="custom-panel-header">
+                <span class="custom-panel-title">Word Document Layout</span>
+                <span class="custom-panel-subtitle">Select spacing, margins, and typography layout styles</span>
+              </div>
+              <div class="form-group">
+                <label for="docx-style-select-search">Document Style</label>
+                <div class="custom-select-container" id="docx-style-select-container">
+                  <input type="text" id="docx-style-select-search" class="custom-select-search-input" placeholder="Select style..." autocomplete="off" role="combobox" aria-expanded="false" aria-haspopup="listbox" />
+                  <div class="custom-select-arrow" id="docx-style-select-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                  <div class="custom-select-dropdown" id="docx-style-select-dropdown" style="display: none;">
+                    <div class="custom-select-options" id="docx-style-select-options" role="listbox">
+                      <div class="custom-select-option" data-value="plain" role="option">Plain Layout (Arial, margins 1")</div>
+                      <div class="custom-select-option" data-value="serif" role="option">Academic (Times New Roman, double spacing)</div>
+                      <div class="custom-select-option" data-value="modern" role="option">Modern (System UI, spacing, custom headings)</div>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" id="select-docx-style" value="plain" />
+              </div>
+            </div>
+
+            <!-- Custom Format Settings -->
+            <div id="settings-custom" class="settings-panel" style="display: none;">
+              <div class="custom-panel-header">
+                <span class="custom-panel-title">Custom File Extension</span>
+                <span class="custom-panel-subtitle">Enter any target file extension for your download</span>
+              </div>
+              <div class="custom-input-row">
+                <div class="custom-ext-wrapper">
+                  <span class="ext-dot">.</span>
+                  <input type="text" id="custom-ext-input" value="log" placeholder="log" aria-label="Custom extension" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Plain Text settings (idle) -->
+          </div>
+
+          <!-- Preview area removed -->
+
+        </div><!-- /.config-container -->
+      </div><!-- /.editor-panel -->
+
+    </div><!-- /.editor-grid -->
+
+  </div><!-- /.workspace -->
+
+  <!-- ── SEO Guide ── -->
+  <div class="guide-wrap">
+    <article class="seo-guide">
+      <h2>How the Text to File Converter Works</h2>
+      <p>This utility enables you to draft or paste text blocks and instantly download them as formatted files directly from the browser. Rather than relying on cloud converters that upload your data to external servers, all transformations are run entirely client-side. This ensures absolute privacy and offline capability for sensitive business records, passwords, source files, and manuscripts.</p>
+
+      <h3>Supported Formats & Syntax Checks</h3>
+      <p>Our tool runs specific structural parsing based on the selected format:</p>
+      <ul>
+        <li><strong>Markdown (.md):</strong> Helps verify standard formatting elements. Checks for tags like headings (<code>#</code>), lists (<code>-</code>), and styling. The tool lets you standardize spacing and previews your styled formatting.</li>
+        <li><strong>PDF Document (.pdf):</strong> Renders your text to a multi-page PDF document. Uses dynamic wrapping to respect page breaks, and supports landscape modes, custom fonts, margins, and automatically calculated page numbers.</li>
+        <li><strong>Word Document (.docx / .doc):</strong> Exports clean HTML models packaged in Microsoft Office namespaces. This ensures Word, LibreOffice, and Google Docs read headings, italics, bullet styles, and line wraps flawlessly.</li>
+        <li><strong>JSON Data (.json):</strong> Runs <code>JSON.parse()</code> verification. If the syntax is malformed, it reports the exact position of missing commas, quotes, or brackets, allowing you to prettify or minify with one click.</li>
+        <li><strong>CSV Spreadsheet (.csv):</strong> Checks comma or semicolon separators. Compares the column layout of every row to flag column imbalances before downloading.</li>
+        <li><strong>Rich Text Format (.rtf):</strong> Emits formatting parameters. Wrap paragraphs in standard, system-friendly code tags that open in Windows WordPad or Apple TextEdit.</li>
+      </ul>
+
+      <h3>100% Client-Side Privacy</h3>
+      <p>By relying entirely on Web Blobs, dynamic script loading, and local JavaScript, the Text to File Converter never sends text input to remote endpoints. Files are compiled in the computer's memory space and downloaded directly, preventing data harvesting and ensuring maximum compliance with privacy rules.</p>
+    </article>
+  </div>
+
+</Layout>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const textInput = document.getElementById('text-input') as HTMLTextAreaElement;
+    if (!textInput) return;
+    
+    const selectFormat = document.getElementById('select-format') as HTMLInputElement;
+    const filenameInput = document.getElementById('filename-input') as HTMLInputElement;
+    const customExtInput = document.getElementById('custom-ext-input') as HTMLInputElement;
+    
+    const btnDownload = document.getElementById('btn-download') as HTMLButtonElement;
+    const btnClear = document.getElementById('btn-clear') as HTMLButtonElement;
+    
+    // Sample buttons
+    const btnSampleTxt = document.getElementById('btn-sample-txt') as HTMLButtonElement;
+    const btnSampleJson = document.getElementById('btn-sample-json') as HTMLButtonElement;
+    const btnSampleMd = document.getElementById('btn-sample-md') as HTMLButtonElement;
+    
+    // Container UI
+    const inputContainer = document.getElementById('input-container') as HTMLDivElement;
+    const inputStats = document.getElementById('input-stats') as HTMLElement;
+    const inputStatus = document.getElementById('input-status') as HTMLElement;
+    
+    // Preview tabs and panels elements removed
+    
+    // Settings panels
+    const settingsPanels = {
+      pdf: document.getElementById('settings-pdf') as HTMLDivElement,
+      docx: document.getElementById('settings-docx') as HTMLDivElement,
+      custom: document.getElementById('settings-custom') as HTMLDivElement
+    };
+
+    const dynamicSettingsWrapper = document.querySelector('.dynamic-settings-wrapper') as HTMLDivElement;
+    
+    const selectPdfOrient = document.getElementById('select-pdf-orient') as HTMLInputElement;
+    const selectPdfFont = document.getElementById('select-pdf-font') as HTMLInputElement;
+    const selectPdfMargins = document.getElementById('select-pdf-margins') as HTMLInputElement;
+    const chkPdfPages = document.getElementById('chk-pdf-pages') as HTMLInputElement;
+    
+    const selectDocxStyle = document.getElementById('select-docx-style') as HTMLInputElement;
+
+    // --- Searchable Combobox Factory ---
+    function setupSearchableCombobox(prefix: string, hiddenInputId: string) {
+      const selectContainer = document.getElementById(prefix + '-container');
+      const selectSearch = document.getElementById(prefix + '-search') as HTMLInputElement;
+      const selectArrow = document.getElementById(prefix + '-arrow');
+      const selectDropdown = document.getElementById(prefix + '-dropdown');
+      const selectOptionsList = document.getElementById(prefix + '-options');
+      const hiddenInput = document.getElementById(hiddenInputId) as HTMLInputElement;
+      
+      if (!selectContainer || !selectSearch || !selectArrow || !selectDropdown || !selectOptionsList || !hiddenInput) return;
+
+      const selectOptions = selectOptionsList.querySelectorAll('.custom-select-option');
+      let lastSelectedValue = hiddenInput.value;
+      let lastSelectedText = '';
+
+      // Initialize display name
+      const initialOption = Array.from(selectOptions).find(opt => opt.getAttribute('data-value') === lastSelectedValue);
+      if (initialOption) {
+        lastSelectedText = initialOption.textContent || '';
+        selectSearch.value = lastSelectedText;
+        initialOption.classList.add('selected');
+      }
+
+      function openDropdown() {
+        if (!selectContainer || !selectSearch || !selectDropdown) return;
+        selectContainer.classList.add('open');
+        selectSearch.setAttribute('aria-expanded', 'true');
+        selectDropdown.style.display = 'flex';
+        selectSearch.value = ''; // clear for searching
+        filterOptions('');
+      }
+
+      function closeDropdown() {
+        if (!selectContainer || !selectSearch || !selectDropdown) return;
+        selectContainer.classList.remove('open');
+        selectSearch.setAttribute('aria-expanded', 'false');
+        selectDropdown.style.display = 'none';
+        selectSearch.value = lastSelectedText;
+        selectSearch.blur();
+      }
+
+      function filterOptions(query: string) {
+        const filter = query.toLowerCase().trim();
+        let matches = 0;
+
+        const existingNoResults = selectOptionsList.querySelector('.custom-select-no-results');
+        if (existingNoResults) existingNoResults.remove();
+
+        selectOptions.forEach(opt => {
+          const text = opt.textContent?.toLowerCase() || '';
+          const val = opt.getAttribute('data-value');
+          
+          if (text.includes(filter)) {
+            (opt as HTMLElement).style.display = 'block';
+            if (val === 'custom') {
+              opt.textContent = filter ? `Custom Extension (.${filter})` : 'Custom Extension...';
+            }
+            matches++;
+          } else if (val === 'custom' && filter !== '') {
+            (opt as HTMLElement).style.display = 'block';
+            opt.textContent = `Custom Extension (.${filter})`;
+            matches++;
+          } else {
+            (opt as HTMLElement).style.display = 'none';
+          }
+        });
+
+        if (matches === 0) {
+          const noResults = document.createElement('div');
+          noResults.className = 'custom-select-no-results';
+          noResults.textContent = 'No options found';
+          selectOptionsList.appendChild(noResults);
+        }
+      }
+
+      selectSearch.addEventListener('input', (e) => {
+        if (!selectContainer.classList.contains('open')) {
+          openDropdown();
+        }
+        filterOptions((e.target as HTMLInputElement).value);
+      });
+
+      selectArrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selectContainer.classList.contains('open')) {
+          closeDropdown();
+        } else {
+          openDropdown();
+          selectSearch.focus();
+        }
+      });
+
+      selectSearch.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!selectContainer.classList.contains('open')) {
+          openDropdown();
+        }
+      });
+
+      selectSearch.addEventListener('focus', () => {
+        if (!selectContainer.classList.contains('open')) {
+          openDropdown();
+        }
+      });
+
+      selectOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const value = opt.getAttribute('data-value') || '';
+          hiddenInput.value = value;
+          
+          lastSelectedValue = value;
+          lastSelectedText = opt.textContent || '';
+          selectSearch.value = lastSelectedText;
+
+          selectOptions.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+
+          closeDropdown();
+
+          hiddenInput.dispatchEvent(new Event('change'));
+        });
+      });
+
+      // Listen for programmatic updates from the outside
+      hiddenInput.addEventListener('change', () => {
+        const val = hiddenInput.value;
+        if (val === lastSelectedValue) return; // avoid infinite loop/re-runs
+        
+        const matched = Array.from(selectOptions).find(opt => opt.getAttribute('data-value') === val);
+        if (matched) {
+          lastSelectedValue = val;
+          lastSelectedText = matched.textContent || '';
+          selectSearch.value = lastSelectedText;
+          
+          selectOptions.forEach(o => o.classList.remove('selected'));
+          matched.classList.add('selected');
+        }
+      });
+
+      document.addEventListener('click', (e: MouseEvent) => {
+        if (!selectContainer.contains(e.target as Node)) {
+          if (selectContainer.classList.contains('open')) {
+            closeDropdown();
+          }
+        }
+      });
+
+      document.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && selectContainer.classList.contains('open')) {
+          closeDropdown();
+        }
+      });
+    }
+
+    // Initialize all custom selects
+    setupSearchableCombobox('format-select', 'select-format');
+    setupSearchableCombobox('csv-delimiter-select', 'select-csv-delimiter');
+    setupSearchableCombobox('pdf-orient-select', 'select-pdf-orient');
+    setupSearchableCombobox('pdf-font-select', 'select-pdf-font');
+    setupSearchableCombobox('pdf-margins-select', 'select-pdf-margins');
+    setupSearchableCombobox('docx-style-select', 'select-docx-style');
+
+    // State
+    let selectedFormat = 'txt';
+    
+    const SAMPLES = {
+      text: "Text to File Converter\n======================\nThis is a simple text document designed to showcase downloading features.\nYou can write anything here, and export it into plain text, rich text, or clean PDFs.\n\nEnjoy using offline tools that protect your privacy!",
+      json: '{\n  "tool": "Text to File Converter",\n  "version": "1.0.0",\n  "features": [\n    "Auto-format detection",\n    "JSON structure verification",\n    "PDF page flow wrapping",\n    "100% offline security"\n  ],\n  "author": "AsapGuide"\n}',
+      md: "# Universal Document Exporter\n\nWelcome! This is a **Markdown** sample document.\n\n### Formatting Examples\n- **Bold text** and *italic style*\n- Inline code: `const file = 'document'`\n- List of features:\n  1. Offline conversion\n  2. Multi-format download\n  3. Live preview sandboxing\n\n```javascript\n// Code blocks are fully supported\nconsole.log('Downloading...');\n```"
+    };
+
+    function formatNumber(num: number): string {
+      return new Intl.NumberFormat('en-US').format(num);
+    }
+
+    function getStatsString(val: string): string {
+      const chars = val.length;
+      const trimmed = val.trim();
+      const words = trimmed ? trimmed.split(/\s+/).length : 0;
+      const lines = val ? val.split('\n').length : 0;
+      return `${formatNumber(chars)} chars | ${formatNumber(words)} words | ${formatNumber(lines)} lines`;
+    }
+
+    function escapeHTML(str: string): string {
+      return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+    }
+
+    // Markdown Parser for Visual Rendered Preview
+    function parseMarkdown(md: string): string {
+      let html = md
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      
+      // Headers
+      html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+      html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+      
+      // Code Blocks
+      html = html.replace(/```([\s\S]*?)```/g, '<pre class="preview-code-block"><code>$1</code></pre>');
+      
+      // Inline Code
+      html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+      
+      // Bold / Italic
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+      
+      // Lists (unordered)
+      html = html.replace(/^\s*[-*+]\s+(.*?)$/gm, '<li>$1</li>');
+      // Lists (ordered)
+      html = html.replace(/^\s*\d+\.\s+(.*?)$/gm, '<li class="ord-li">$1</li>');
+      
+      // Simple paragraph wrapper
+      const lines = html.split('\n');
+      let insideList = false;
+      let insideOrdList = false;
+      const parsedLines = lines.map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return '';
+        
+        // Handle list encapsulation
+        if (trimmed.startsWith('<li>')) {
+          let prefix = '';
+          if (!insideList) {
+            insideList = true;
+            prefix = '<ul>';
+          }
+          return prefix + line;
+        } else if (insideList) {
+          insideList = false;
+          return '</ul>' + line;
+        }
+
+        if (trimmed.startsWith('<li class="ord-li">')) {
+          let prefix = '';
+          if (!insideOrdList) {
+            insideOrdList = true;
+            prefix = '<ol>';
+          }
+          return prefix + line.replace(' class="ord-li"', '');
+        } else if (insideOrdList) {
+          insideOrdList = false;
+          return '</ol>' + line;
+        }
+        
+        if (trimmed.startsWith('<h') || trimmed.startsWith('<pre') || trimmed.startsWith('</pre') || trimmed.startsWith('<code') || trimmed.startsWith('<ul>') || trimmed.startsWith('<ol>')) {
+          return line;
+        }
+        
+        return `<p>${line}</p>`;
+      });
+      
+      let finalHtml = parsedLines.join('\n');
+      if (insideList) finalHtml += '</ul>';
+      if (insideOrdList) finalHtml += '</ol>';
+      
+      return finalHtml;
+    }
+
+    // Wrap in full HTML boilerplate
+    function wrapHTMLBoilerplate(content: string): string {
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHTML(filenameInput.value)}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1c2b33;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    pre {
+      background: #f0f2f5;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+    h1, h2, h3 {
+      color: #121418;
+      margin-top: 1.5em;
+    }
+  </style>
+</head>
+<body>
+${content}
+</body>
+</html>`;
+    }
+
+    // Format RTF payload
+    function generateRTF(text: string, wrapBreaks: boolean): string {
+      // Escape special characters in RTF
+      let escaped = text
+        .replace(/\\/g, '\\\\')
+        .replace(/\{/g, '\\{')
+        .replace(/\}/g, '\\}')
+        .replace(/\n/g, wrapBreaks ? '\\par\n' : '\n');
+      return `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Arial;}}\\f0\\fs24 ${escaped}}`;
+    }
+
+    // Generate Word Document (Office-HTML trick)
+    function generateWordDocument(text: string, style: string): string {
+      const isHtml = /<\/?[a-z][\s\S]*>/i.test(text) && (text.includes('<div') || text.includes('<html') || text.includes('<p>') || text.includes('<span'));
+      const isMd = /^#+\s|^\s*[-*+]\s+|\*\*.*?\*\*|`.*?`/m.test(text);
+
+      let bodyHtml = '';
+      if (isHtml) {
+        bodyHtml = text;
+      } else if (isMd) {
+        bodyHtml = parseMarkdown(text);
+      } else {
+        bodyHtml = text.split('\n').map(l => `<p>${escapeHTML(l)}</p>`).join('\n');
+      }
+
+      let cssStyles = '';
+      if (style === 'serif') {
+        cssStyles = `
+          body { font-family: "Times New Roman", Times, serif; font-size: 12pt; line-height: 2.0; margin: 1in; }
+          h1 { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 24pt; }
+          p { margin-bottom: 12pt; text-indent: 0.5in; }
+        `;
+      } else if (style === 'modern') {
+        cssStyles = `
+          body { font-family: "Arial", sans-serif; font-size: 11pt; line-height: 1.5; margin: 1in; color: #333333; }
+          h1 { font-size: 20pt; font-weight: bold; border-bottom: 1px solid #cccccc; padding-bottom: 6pt; color: #0866FF; }
+          h2 { font-size: 14pt; font-weight: bold; color: #1c2b33; margin-top: 18pt; }
+          p { margin-bottom: 8pt; }
+          code { font-family: Consolas, monospace; background: #f4f4f4; padding: 2px; }
+        `;
+      } else {
+        // Plain Layout
+        cssStyles = `
+          body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.35; margin: 1in; }
+          p { margin-bottom: 6pt; }
+        `;
+      }
+
+      return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHTML(filenameInput.value)}</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    ${cssStyles}
+  </style>
+</head>
+<body>
+  ${bodyHtml}
+</body>
+</html>`;
+    }
+
+    // --- Validate and Refresh UI ---
+    function updateState() {
+      const text = textInput.value;
+      inputStats.textContent = getStatsString(text);
+      
+      if (text.trim().length > 0) {
+        inputContainer.classList.add('is-valid');
+        inputStatus.textContent = '✓ Text Active';
+        
+        btnDownload.disabled = false;
+      } else {
+        inputContainer.classList.remove('is-valid');
+        inputStatus.textContent = 'Ready';
+        
+        btnDownload.disabled = true;
+      }
+
+      // Validate current selections
+      const format = selectFormat.value;
+      
+      // Perform validation depending on format selected
+      validateSelectedFormat(text, format);
+    }
+
+    // Specific validation reporting
+    function validateSelectedFormat(text: string, format: string) {
+      const trimmed = text.trim();
+      
+      // Hide all dynamic panels
+      // Hide all dynamic panels
+      Object.values(settingsPanels).forEach(p => {
+        if (p) p.style.display = 'none';
+      });
+      
+      const hasSettings = ['pdf', 'docx', 'custom'].includes(format);
+      if (dynamicSettingsWrapper) {
+        dynamicSettingsWrapper.style.display = hasSettings ? 'block' : 'none';
+      }
+
+      // Show selected format setting
+      if (hasSettings && settingsPanels[format as keyof typeof settingsPanels]) {
+        settingsPanels[format as keyof typeof settingsPanels].style.display = 'block';
+      }
+    }
+
+    // --- Helper to Generate Export Payload ---
+    function getExportContent(text: string, format: string): string {
+      if (format === 'html') {
+        return wrapHTMLBoilerplate(text);
+      } else if (format === 'rtf') {
+        return generateRTF(text, true);
+      } else if (format === 'docx') {
+        return generateWordDocument(text, selectDocxStyle.value);
+      } else if (format === 'pdf') {
+        const orientation = selectPdfOrient.value;
+        const font = selectPdfFont.value;
+        const margin = selectPdfMargins.value;
+        const pages = chkPdfPages.checked ? 'Enabled' : 'Disabled';
+        return `%PDF-1.3 Setup Specification\n===========================\nFormat: PDF Document (.pdf)\nOrientation: ${orientation}\nFont Family: ${font}\nMargins: ${margin}\nPage Numbering: ${pages}\nText Lines to Process: ${text.split('\n').length}\n\n[Will compile to native PDF pages dynamically during download]`;
+      }
+      return text;
+    }
+
+    function getFormattedExtension() {
+      if (selectedFormat === 'custom') {
+        let val = customExtInput.value.trim().toLowerCase();
+        if (!val) return '';
+        if (!val.startsWith('.')) val = '.' + val;
+        return val;
+      }
+      
+      const extMap: Record<string, string> = {
+        txt: '.txt',
+        md: '.md',
+        pdf: '.pdf',
+        docx: '.docx',
+        html: '.html',
+        json: '.json',
+        yaml: '.yaml',
+        xml: '.xml',
+        csv: '.csv',
+        tsv: '.tsv',
+        sql: '.sql',
+        env: '.env',
+        ini: '.ini',
+        tex: '.tex',
+        rtf: '.rtf',
+        log: '.log'
+      };
+      return extMap[selectedFormat] || '.txt';
+    }
+
+    // Switch active settings target format
+    selectFormat.addEventListener('change', () => {
+      selectedFormat = selectFormat.value;
+      if (selectedFormat === 'custom') {
+        const searchInput = document.getElementById('format-select-search') as HTMLInputElement;
+        if (searchInput) {
+          const val = searchInput.value.trim();
+          const match = val.match(/Custom Extension \(\.(.+)\)/i);
+          if (match && match[1]) {
+            customExtInput.value = match[1].toLowerCase();
+          } else if (val && val !== 'Custom Extension...' && !val.includes('Select format')) {
+            customExtInput.value = val.replace(/^\./, '').toLowerCase();
+          }
+        }
+      }
+      updateState();
+    });
+
+    customExtInput.addEventListener('input', () => {
+      updateState();
+    });
+
+    // Suggestions click handlers removed
+
+    // Checkbox and settings event listeners
+    selectPdfOrient.addEventListener('change', updateState);
+    selectPdfFont.addEventListener('change', updateState);
+    selectPdfMargins.addEventListener('change', updateState);
+    chkPdfPages.addEventListener('change', updateState);
+    selectDocxStyle.addEventListener('change', updateState);
+
+    // Action Button Events removed
+
+    // Clipboard copy handler removed
+
+    // Preview tab event listeners removed
+
+    // --- Sample Buttons ---
+    function loadSample(type: 'text' | 'json' | 'md') {
+      textInput.value = SAMPLES[type];
+      
+      // Auto switch target format based on type to improve UX
+      if (type === 'json') selectFormat.value = 'json';
+      else if (type === 'md') selectFormat.value = 'md';
+      else selectFormat.value = 'txt';
+      
+      // Fire selectFormat change event to map extension
+      selectFormat.dispatchEvent(new Event('change'));
+      
+      updateState();
+    }
+
+    btnSampleTxt.addEventListener('click', () => loadSample('text'));
+    btnSampleJson.addEventListener('click', () => loadSample('json'));
+    btnSampleMd.addEventListener('click', () => loadSample('md'));
+
+    btnClear.addEventListener('click', () => {
+      textInput.value = '';
+      updateState();
+      textInput.focus();
+    });
+
+    // Input listeners
+    let inputTimeout: any;
+    textInput.addEventListener('input', () => {
+      clearTimeout(inputTimeout);
+      inputTimeout = setTimeout(updateState, 100);
+    });
+
+    // Drag and Drop
+    textInput.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      inputContainer.classList.add('drag-over');
+    });
+
+    textInput.addEventListener('dragleave', () => {
+      inputContainer.classList.remove('drag-over');
+    });
+
+    textInput.addEventListener('drop', (e) => {
+      e.preventDefault();
+      inputContainer.classList.remove('drag-over');
+      
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            textInput.value = event.target.result as string;
+            // Guess title
+            const dotIdx = file.name.lastIndexOf('.');
+            if (dotIdx !== -1) {
+              filenameInput.value = file.name.substring(0, dotIdx);
+              const ext = file.name.substring(dotIdx + 1).toLowerCase();
+              if (['txt', 'md', 'pdf', 'docx', 'html', 'json', 'csv', 'tsv', 'rtf', 'yaml', 'xml', 'sql', 'env', 'ini', 'tex', 'log'].includes(ext)) {
+                selectFormat.value = ext;
+              } else {
+                selectFormat.value = 'custom';
+                customExtInput.value = ext;
+              }
+              selectFormat.dispatchEvent(new Event('change'));
+            }
+            updateState();
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // --- Compile & Download File ---
+    btnDownload.addEventListener('click', () => {
+      const text = textInput.value;
+      if (!text.trim()) return;
+
+      const filename = (filenameInput.value.trim() || 'document') + getFormattedExtension();
+      const origText = btnDownload.textContent || 'Download File';
+
+      // Start compiling state
+      btnDownload.disabled = true;
+      btnDownload.textContent = 'Compiling...';
+
+      // Helper to finalize download state with feedback
+      const finalizeDownload = () => {
+        btnDownload.textContent = '✓ Downloaded!';
+        setTimeout(() => {
+          btnDownload.disabled = false;
+          btnDownload.textContent = origText;
+        }, 1200);
+      };
+
+      if (selectedFormat === 'pdf') {
+        const orient = selectPdfOrient.value;
+        const font = selectPdfFont.value;
+        const margin = selectPdfMargins.value;
+        const hasPages = chkPdfPages.checked;
+
+        // Introduce small artificial compiling delay for consistent feedback feel
+        setTimeout(() => {
+          downloadPDF(text, filename, {
+            orientation: orient,
+            font: font,
+            margin: margin,
+            pageNumbers: hasPages
+          }).then(() => {
+            finalizeDownload();
+          }).catch(err => {
+            alert(`Failed to generate PDF: ${err.message}`);
+            btnDownload.disabled = false;
+            btnDownload.textContent = origText;
+          });
+        }, 600);
+      } else {
+        const content = getExportContent(text, selectedFormat);
+        let mimeType = 'text/plain;charset=utf-8';
+        
+        if (selectedFormat === 'html') {
+          mimeType = 'text/html;charset=utf-8';
+        } else if (selectedFormat === 'json') {
+          mimeType = 'application/json;charset=utf-8';
+        } else if (selectedFormat === 'yaml') {
+          mimeType = 'text/yaml;charset=utf-8';
+        } else if (selectedFormat === 'xml') {
+          mimeType = 'application/xml;charset=utf-8';
+        } else if (selectedFormat === 'csv') {
+          mimeType = 'text/csv;charset=utf-8';
+        } else if (selectedFormat === 'tsv') {
+          mimeType = 'text/tab-separated-values;charset=utf-8';
+        } else if (selectedFormat === 'sql') {
+          mimeType = 'application/sql;charset=utf-8';
+        } else if (selectedFormat === 'md') {
+          mimeType = 'text/markdown;charset=utf-8';
+        } else if (selectedFormat === 'rtf') {
+          mimeType = 'application/rtf;charset=utf-8';
+        } else if (selectedFormat === 'docx') {
+          mimeType = 'application/msword;charset=utf-8';
+        } else if (selectedFormat === 'tex') {
+          mimeType = 'application/x-tex;charset=utf-8';
+        }
+
+        // Add a small compiling delay (600ms) to make compilation/blob building feel real and premium
+        setTimeout(() => {
+          const blob = new Blob([content], { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          finalizeDownload();
+        }, 600);
+      }
+    });
+
+    // --- jsPDF Download wrapper ---
+    function downloadPDF(text: string, filename: string, options: any): Promise<void> {
+      return new Promise((resolve, reject) => {
+        // Check if library already loaded
+        if ((window as any).jspdf) {
+          generatePDF(text, filename, options);
+          resolve();
+        } else {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+          script.onload = () => {
+            generatePDF(text, filename, options);
+            resolve();
+          };
+          script.onerror = () => {
+            reject(new Error('Failed to download PDF generation libraries. Make sure you are online.'));
+          };
+          document.head.appendChild(script);
+        }
+      });
+    }
+
+    function generatePDF(text: string, filename: string, options: any) {
+      const { jsPDF } = (window as any).jspdf;
+      const doc = new jsPDF({
+        orientation: options.orientation || 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const font = options.font || 'helvetica';
+      doc.setFont(font);
+      
+      const marginsMap: Record<string, number> = {
+        small: 10,
+        normal: 20,
+        large: 30
+      };
+      
+      const margin = marginsMap[options.margin || 'normal'] || 20;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const contentWidth = pageWidth - (margin * 2);
+      
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(text, contentWidth);
+      
+      const lineHeight = 6;
+      let currentY = margin;
+      let pageNum = 1;
+      
+      for (let i = 0; i < lines.length; i++) {
+        // Check for overflow
+        if (currentY + lineHeight > pageHeight - margin) {
+          if (options.pageNumbers) {
+            doc.setFontSize(8);
+            doc.text(`Page ${pageNum}`, pageWidth / 2, pageHeight - (margin / 2), { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont(font);
+          }
+          doc.addPage();
+          pageNum++;
+          currentY = margin;
+        }
+        
+        doc.text(lines[i], margin, currentY);
+        currentY += lineHeight;
+      }
+      
+      if (options.pageNumbers) {
+        doc.setFontSize(8);
+        doc.text(`Page ${pageNum}`, pageWidth / 2, pageHeight - (margin / 2), { align: 'center' });
+      }
+      
+      doc.save(filename);
+    }
+
+    // Initial setup run
+    updateState();
+  });
+</script>
+
+<style>
+  /* ── Hero ── */
+  .tool-hero {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 64px 24px 56px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 14px;
+  }
+
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+  }
+
+  .accent {
+    font-style: italic;
+    color: var(--color-tertiary);
+  }
+
+  .tool-desc {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  /* ── Workspace Layout ── */
+  .workspace {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .editor-grid { grid-template-columns: 1fr; }
+  }
+
+  .editor-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+    flex-wrap: wrap;
+  }
+
+  .panel-bar-left h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+  }
+
+  .panel-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .detected-badge {
+    background-color: rgba(28, 43, 51, 0.05);
+    color: var(--color-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: var(--rounded-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .detected-badge span {
+    color: var(--color-tertiary);
+    font-weight: 700;
+  }
+
+  /* Input area styling */
+  .input-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.15s ease;
+    height: 520px;
+  }
+
+  .input-container:focus-within {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+  }
+
+  .input-container.is-valid {
+    border-color: var(--color-tertiary);
+  }
+
+  .input-container.drag-over {
+    border-color: var(--color-tertiary);
+    background: rgba(8, 102, 255, 0.02);
+  }
+
+  textarea {
+    width: 100%;
+    flex: 1;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: none;
+    padding: 16px;
+    background: transparent;
+    color: var(--color-primary);
+    border: none;
+    outline: none;
+    overflow-y: auto;
+  }
+
+  /* Sub Toolbar */
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F5F7FA;
+    border-bottom: 1px solid var(--color-border);
+    padding: 6px 12px;
+    min-height: 40px;
+    gap: 12px;
+    user-select: none;
+  }
+
+  .toolbar-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-toolbar {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--rounded-sm);
+    color: var(--color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .btn-toolbar:hover {
+    background: rgba(28, 43, 51, 0.06);
+    color: var(--color-primary);
+  }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    color: var(--color-secondary);
+    user-select: none;
+  }
+
+  .input-container.is-valid .input-footer {
+    background-color: rgba(8, 102, 255, 0.03);
+  }
+
+  .footer-stats { font-weight: 500; }
+  .footer-status { font-weight: 600; }
+
+  /* ── Config Panel Container ── */
+  .config-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 480px) {
+    .settings-grid { grid-template-columns: 1fr; }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Filename suffix alignment */
+  .filename-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-md);
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .filename-input-wrapper input {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px 12px;
+    flex-grow: 1;
+    font-weight: 500;
+  }
+
+  /* Filename extension badge removed */
+
+  /* Dynamic Settings panels */
+  .dynamic-settings-wrapper {
+    border-top: 1px solid var(--color-border);
+    padding-top: 20px;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* ── Custom Extension Panel styling ── */
+  .custom-panel-header {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 8px;
+  }
+  
+  .custom-panel-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+  
+  .custom-panel-subtitle {
+    font-size: 0.74rem;
+    color: var(--color-secondary);
+  }
+  
+  .custom-input-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .custom-ext-wrapper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-md);
+    background: var(--color-surface);
+    overflow: hidden;
+    height: 38px;
+    width: 120px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  .custom-ext-wrapper:focus-within {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+  }
+  
+  .ext-dot {
+    background: rgba(28, 43, 51, 0.04);
+    color: var(--color-secondary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    height: 100%;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--color-border);
+    user-select: none;
+  }
+  
+  #custom-ext-input {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 10px !important;
+    width: 100%;
+    height: 100%;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+  }
+  
+  /* Quick suggestion styles removed */
+
+  .status-msg {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+  }
+
+  .status-msg.success { color: var(--color-success); }
+  .status-msg.error { color: var(--color-error); }
+  .status-msg.warning { color: var(--color-warning); }
+
+  .actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .btn-action {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    color: var(--color-primary);
+    font-family: var(--font-family);
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+
+  .btn-action:hover {
+    background-color: var(--color-neutral);
+    border-color: rgba(28,43,51,0.25);
+  }
+
+  /* Options list align */
+  .option-check {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Checkbox style override */
+  .checkbox-container {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    padding-left: 26px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    user-select: none;
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 0;
+  }
+
+  .checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+
+  .checkmark {
+    position: absolute;
+    left: 0;
+    height: 16px;
+    width: 16px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+  }
+
+  .checkbox-container:hover input ~ .checkmark {
+    border-color: var(--color-secondary);
+  }
+
+  .checkbox-container input:checked ~ .checkmark {
+    background-color: var(--color-tertiary);
+    border-color: var(--color-tertiary);
+  }
+
+  .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+  }
+
+  .checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+  }
+
+  .checkbox-container .checkmark:after {
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  /* PDF & DOCX compact selectors */
+  .pdf-options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .pdf-options-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  }
+
+  .pdf-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .form-group-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .form-group-compact label {
+    font-size: 0.68rem;
+    margin: 0;
+  }
+
+  .label-compact {
+    font-size: 0.76rem !important;
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 0;
+  }
+
+  .select-compact {
+    height: 32px;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  .label-align {
+    justify-content: flex-end;
+    padding-bottom: 6px;
+  }
+
+  .info-msg {
+    font-size: 0.74rem;
+    color: var(--color-secondary);
+    line-height: 1.4;
+  }
+
+  /* Previews removed */
+
+  /* Core button overrides */
+  .btn-ghost {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  .panel-bar-right .btn-primary {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  /* Extreme Mobile Fixes */
+  @media (max-width: 480px) {
+    .panel-bar { flex-wrap: wrap; height: auto; gap: 8px; }
+    .panel-bar-right { width: 100%; justify-content: flex-end; }
+    .workspace { padding: 24px 16px 40px; }
+    .tool-hero { padding: 40px 16px 32px; }
+    .input-container { height: 380px; }
+    .config-container { height: auto !important; min-height: 0; }
+  }
+</style>

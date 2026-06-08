@@ -78,6 +78,17 @@ export const TOOLS: ToolEntry[] = [
     status: 'live'
   },
   {
+    id: 'text-to-file',
+    title: 'Text to File Converter',
+    description: 'Convert and download raw text into multiple formats like TXT, MD, PDF, DOCX, HTML, JSON, or CSV with instant validation.',
+    path: '/text-to-file',
+    category: 'utilities',
+    lifecycle: 'static',
+    tags: ['utilities', 'developer-tools'],
+    titleSearch: 'text to file converter download pdf docx markdown csv json text',
+    status: 'live'
+  },
+  {
     id: 'api-cost-calculator',
     title: 'LLM API Cost Calculator',
     description: 'Compare pricing across OpenAI, Anthropic, Gemini, and DeepSeek.',
