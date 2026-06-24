@@ -89,17 +89,6 @@ export const TOOLS: ToolEntry[] = [
     status: 'live'
   },
   {
-    id: 'api-cost-calculator',
-    title: 'LLM API Cost Calculator',
-    description: 'Compare pricing across OpenAI, Anthropic, Gemini, and DeepSeek.',
-    path: '#',
-    category: 'ai-tools',
-    lifecycle: 'model-dependent',
-    tags: ['ai-tools'],
-    titleSearch: 'llm api cost calculator openai anthropic gemini deepseek',
-    status: 'soon'
-  },
-  {
     id: 'lm-studio-tester',
     title: 'LM Studio Server Tester',
     description: 'Test connection, load/unload models, and chat with your local LM Studio instance directly from the browser.',
